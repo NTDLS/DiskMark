@@ -1,0 +1,4 @@
+AppLogo.jpg
+	Font Name	: Garamond
+	Font Size	: 24
+	Font Color	: 000000

@@ -1,0 +1,277 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON                    "MainIcon.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CONFIG DIALOGEX 0, 0, 166, 119
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    COMBOBOX        IDC_DISKDRIVE,54,7,105,30,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_CHUNKSIZE,54,22,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_IOS,54,39,105,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ITERATIONS,54,56,105,14,ES_AUTOHSCROLL
+    CONTROL         "Allow Intermediate Caching?",IDC_ALLOWCACHING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,74,105,10
+    DEFPUSHBUTTON   "Start",IDC_CMDOK,120,98,39,14
+    PUSHBUTTON      "Help",IDC_CMDHELP,7,98,39,14
+    LTEXT           "Disk Drive",IDC_STATIC,13,9,34,8
+    LTEXT           "Chunk Size",IDC_STATIC,10,25,37,8
+    LTEXT           "IOs",IDC_STATIC,35,42,12,8
+    LTEXT           "Iterations",IDC_STATIC,17,59,30,8
+    PUSHBUTTON      "Cancel",IDC_CMDCANCEL,77,98,39,14
+END
+
+IDD_MAIN DIALOGEX 0, 0, 412, 233
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Run",ID_CMDMULTI,355,212,50,14
+    LTEXT           "Bytes per Iteration:",IDC_STATIC,137,30,64,8
+    LTEXT           "Allow Caching:",IDC_STATIC,14,18,48,8
+    LTEXT           "IOs per Iteration:",IDC_STATIC,143,18,58,8
+    LTEXT           "Chunk Size:",IDC_STATIC,24,30,38,8
+    LTEXT           "Iterations:",IDC_STATIC,301,17,35,8
+    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_BYTESPERITERATION,204,30,58,8
+    LTEXT           "xxxxxxxxxxxxxxxxxx",IDC_ALLOWCACHE,64,18,58,8
+    LTEXT           "xxxxxxxxxxxxxxxxxxxx",IDC_IOS,204,18,58,8
+    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_CHUNKSIZE,64,30,58,8
+    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_ITERATIONS,338,17,58,8
+    GROUPBOX        "Configuration",IDC_STATIC,7,7,398,38
+    LTEXT           "Max:",IDC_STATIC,14,102,17,8
+    LTEXT           "Disk Time:",IDC_STATIC,14,62,33,8
+    LTEXT           "Average:",IDC_STATIC,14,82,31,8
+    LTEXT           "Last:",IDC_STATIC,14,72,17,8
+    LTEXT           "n/a",IDC_MAXWRITE,56,102,92,8
+    LTEXT           "n/a",IDC_DISKTIMEWRITE,56,62,92,8
+    LTEXT           "n/a",IDC_AVGWRITE,56,82,92,8
+    LTEXT           "n/a",IDC_LASTWRITE,56,72,92,8
+    GROUPBOX        "Write Performance",IDC_STATIC,7,50,145,69
+    CONTROL         "",IDC_DSKPROGRESS,"msctls_progress32",WS_BORDER,7,194,398,14
+    CONTROL         "",IDC_GRAPHWRITE,"Static",SS_BLACKRECT | SS_SUNKEN,157,54,248,66,WS_EX_CLIENTEDGE
+    CONTROL         "Always on Top?",IDC_ONTOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,215,66,10
+    LTEXT           "Min:",IDC_STATIC,14,92,14,8
+    LTEXT           "n/a",IDC_MINWRITE,56,92,92,8
+    PUSHBUTTON      "Help",IDC_CMDHELP,298,212,50,14
+    CONTROL         "",IDC_GRAPHREAD,"Static",SS_BLACKRECT | SS_SUNKEN,157,124,248,66,WS_EX_CLIENTEDGE
+    LTEXT           "Max:",IDC_STATIC,14,172,17,8
+    LTEXT           "Disk Time:",IDC_STATIC,14,132,33,8
+    LTEXT           "Average:",IDC_STATIC,14,152,31,8
+    LTEXT           "Last:",IDC_STATIC,14,142,17,8
+    LTEXT           "n/a",IDC_MAXREAD,56,172,92,8
+    LTEXT           "n/a",IDC_DISKTIMEREAD,56,132,92,8
+    LTEXT           "n/a",IDC_AVGREAD,56,152,92,8
+    LTEXT           "n/a",IDC_LASTREAD,56,142,92,8
+    GROUPBOX        "Read Performance",IDC_STATIC,7,121,145,69
+    LTEXT           "Min:",IDC_STATIC,14,162,14,8
+    LTEXT           "n/a",IDC_MINREAD,56,162,92,8
+    LTEXT           "Total Dataset Size:",IDC_STATIC,274,30,62,8
+    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_TOTALDATASETSIZE,338,30,58,8
+END
+
+IDD_NETLOGO DIALOGEX 0, 0, 273, 87
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IDD_NETLOGO"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    ICON            "",IDC_ABOUTICON,9,7,21,20
+    LTEXT           "IDC_APPNAME",IDC_APPNAME,84,7,159,8
+    LTEXT           "IDC_APPVERSION",IDC_APPVERSION,84,17,159,8
+    LTEXT           "IDC_APPCOPYRIGHT",IDC_APPCOPYRIGHT,44,53,192,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,40,63,234,1
+    DEFPUSHBUTTON   "OK",IDC_OKBUTTON,220,69,50,14
+    LTEXT           "IDC_BUILDTIMEDATE",IDC_BUILDTIMEDATE,84,27,159,8
+    LTEXT           "www.NetworkDLS.com",IDC_NETLINK,84,37,159,8
+    LTEXT           "Web site:",IDC_STATIC,44,37,31,8
+    LTEXT           "Application:",IDC_STATIC,44,7,38,8
+    LTEXT           "Version:",IDC_STATIC,44,17,26,8
+    LTEXT           "Build:",IDC_STATIC,44,27,18,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 159
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 112
+    END
+
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 405
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 226
+    END
+
+    IDD_NETLOGO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        VERTGUIDE, 248
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,8
+ PRODUCTVERSION 1,0,0,8
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x0L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Disk Benchmarking Utility"
+            VALUE "CompanyName", "NetworkDLS"
+            VALUE "FileDescription", "Disk Benchmarking Utility"
+            VALUE "FileVersion", "1.0.0.8"
+            VALUE "InternalName", "DiskMark"
+            VALUE "LegalCopyright", "Copyright © 2018 NetworkDLS"
+            VALUE "OriginalFilename", "DiskMark.exe"
+            VALUE "ProductName", "DiskMark"
+            VALUE "ProductVersion", "1.0.0.8"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_HANDCURSOR          CURSOR                  "handcurs.cur"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_MAIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_CONFIG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_TITLECAPTION        "DiskMark"
+    IDS_FILEVERSION         "1.0.0.8"
+    IDS_APPCOPYRIGHT        "Copyright © 2018 NetworkDLS. All rights reserved."
+    IDS_REGISTRYKEY         "Software\\NetWorkDLS\\DiskMark"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
