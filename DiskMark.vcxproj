@@ -281,29 +281,28 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\%40Libraries\CCmdLine\CCmdLine.H" />
-    <ClInclude Include="..\%40Libraries\CDuration\CDuration.h" />
-    <ClInclude Include="..\%40Libraries\CGraph\CGraph.H" />
-    <ClInclude Include="..\%40Libraries\CMathParser\CMathParser.h" />
-    <ClInclude Include="..\%40Libraries\CMemPool\CMemPool.H" />
-    <ClInclude Include="..\%40Libraries\CStringBuilder\CStringBuilder.H" />
-    <ClInclude Include="..\%40Libraries\CStringBuilder\CStringBuilderArray.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL.h" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Conversion.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_DateTime.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_File.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Graphics.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_KeyGeneration.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_ListBox.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_ListView.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Math.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Memory.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Menu.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Registry.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_String.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_System.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Types.H" />
-    <ClInclude Include="..\%40Libraries\NSWFL\NSWFL_Windows.H" />
+    <ClInclude Include="CCmdLine\CCmdLine.H" />
+    <ClInclude Include="CDuration\CDuration.h" />
+    <ClInclude Include="CGraph\CGraph.H" />
+    <ClInclude Include="CMathParser\CMathParser.h" />
+    <ClInclude Include="CMemPool\CMemPool.H" />
+    <ClInclude Include="CStringBuilder\CStringBuilder.H" />
+    <ClInclude Include="NSWFL\NSWFL.h" />
+    <ClInclude Include="NSWFL\NSWFL_Conversion.H" />
+    <ClInclude Include="NSWFL\NSWFL_DateTime.H" />
+    <ClInclude Include="NSWFL\NSWFL_File.H" />
+    <ClInclude Include="NSWFL\NSWFL_Graphics.H" />
+    <ClInclude Include="NSWFL\NSWFL_KeyGeneration.H" />
+    <ClInclude Include="NSWFL\NSWFL_ListBox.H" />
+    <ClInclude Include="NSWFL\NSWFL_ListView.H" />
+    <ClInclude Include="NSWFL\NSWFL_Math.H" />
+    <ClInclude Include="NSWFL\NSWFL_Memory.H" />
+    <ClInclude Include="NSWFL\NSWFL_Menu.H" />
+    <ClInclude Include="NSWFL\NSWFL_Registry.H" />
+    <ClInclude Include="NSWFL\NSWFL_String.H" />
+    <ClInclude Include="NSWFL\NSWFL_System.H" />
+    <ClInclude Include="NSWFL\NSWFL_Types.H" />
+    <ClInclude Include="NSWFL\NSWFL_Windows.H" />
     <ClInclude Include="Source\Entry.H" />
     <ClInclude Include="Source\Init.H" />
     <ClInclude Include="Source\Routines.H" />
@@ -313,27 +312,27 @@
     <ClInclude Include="Resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\%40Libraries\CCmdLine\CCmdLine.Cpp" />
-    <ClCompile Include="..\%40Libraries\CDuration\CDuration.cpp" />
-    <ClCompile Include="..\%40Libraries\CGraph\CGraph.Cpp" />
-    <ClCompile Include="..\%40Libraries\CMathParser\CMathParser.cpp" />
-    <ClCompile Include="..\%40Libraries\CMemPool\CMemPool.Cpp" />
-    <ClCompile Include="..\%40Libraries\CStringBuilder\CStringBuilder.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Conversion.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_DateTime.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_File.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Graphics.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_KeyGeneration.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_ListBox.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_ListView.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Math.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Memory.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Menu.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Registry.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_String.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_System.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Types.Cpp" />
-    <ClCompile Include="..\%40Libraries\NSWFL\NSWFL_Windows.Cpp" />
+    <ClCompile Include="CCmdLine\CCmdLine.Cpp" />
+    <ClCompile Include="CDuration\CDuration.cpp" />
+    <ClCompile Include="CGraph\CGraph.Cpp" />
+    <ClCompile Include="CMathParser\CMathParser.cpp" />
+    <ClCompile Include="CMemPool\CMemPool.Cpp" />
+    <ClCompile Include="CStringBuilder\CStringBuilder.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Conversion.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_DateTime.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_File.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Graphics.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_KeyGeneration.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_ListBox.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_ListView.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Math.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Memory.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Menu.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Registry.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_String.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_System.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Types.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Windows.Cpp" />
     <ClCompile Include="Source\Entry.Cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -389,9 +388,6 @@
   <ItemGroup>
     <None Include="Resources\handcurs.cur" />
     <None Include="Resources\MainIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\%40Libraries\CMathParser\Information.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

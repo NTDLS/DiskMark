@@ -1,0 +1,24 @@
+[submodule "NSWFL"]
+	path = NSWFL
+	url = https://github.com/NTDLS/NSWFL
+[submodule "CStringBuilder"]
+	path = CStringBuilder
+	url = https://github.com/NTDLS/CStringBuilder
+[submodule "CDuration"]
+	path = CDuration
+	url = https://github.com/NTDLS/CDuration
+[submodule "CGraph"]
+	path = CGraph
+	url = https://github.com/NTDLS/CGraph
+[submodule "CMathParser"]
+	path = CMathParser
+	url = https://github.com/NTDLS/CMathParser
+[submodule "CMemPool"]
+	path = CMemPool
+	url = https://github.com/NTDLS/CMemPool
+[submodule "CCmdLine"]
+	path = CCmdLine
+	url = https://github.com/NTDLS/CCmdLine
+[submodule "InsecureInterface"]
+	path = InsecureInterface
+	url = https://github.com/NTDLS/InsecureInterface

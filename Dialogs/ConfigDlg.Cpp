@@ -8,9 +8,9 @@
 
 #include "../Resources/Resource.H"
 
-#include "../../@Libraries//NSWFL/NSWFL.H"
-#include "../../@Libraries//CMathParser/CMathParser.H"
-#include "../../@Libraries//CStringBuilder/CStringBuilder.H"
+#include "NSWFL/NSWFL.H"
+#include "CMathParser/CMathParser.H"
+#include "CStringBuilder/CStringBuilder.H"
 
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"

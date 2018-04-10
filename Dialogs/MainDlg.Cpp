@@ -9,9 +9,9 @@
 
 #include "../Resources/Resource.H"
 
-#include "../../@Libraries//NSWFL/NSWFL.H"
-#include "../../@Libraries//CGraph/CGraph.H"
-#include "../../@Libraries//CDuration/CDuration.H"
+#include "NSWFL/NSWFL.H"
+#include "CGraph/CGraph.H"
+#include "CDuration/CDuration.H"
 
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"
