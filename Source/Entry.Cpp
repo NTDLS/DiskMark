@@ -12,7 +12,7 @@
 
 #include "../Resources/Resource.H"
 
-#include "NSWFL/NSWFL.H"
+#include "../NSWFL/NSWFL.H"
 
 #include "Entry.H"
 #include "Init.H"

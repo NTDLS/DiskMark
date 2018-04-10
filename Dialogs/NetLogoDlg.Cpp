@@ -8,7 +8,7 @@
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"
 #include "../Resources/Resource.H"
-#include "NSWFL/NSWFL.H"
+#include "../NSWFL/NSWFL.H"
 
 #include "NetLogoDlg.H"
 
