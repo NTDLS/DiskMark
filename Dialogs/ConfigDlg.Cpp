@@ -9,8 +9,7 @@
 #include "../Resources/Resource.H"
 
 #include "../NSWFL/NSWFL.H"
-#include "../CMathParser/CMathParser.H"
-#include "../CStringBuilder/CStringBuilder.H"
+#include "../CMathParser/CMathParser.h"
 
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"
@@ -24,6 +23,7 @@
 using namespace NSWFL::Windows;
 using namespace NSWFL::File;
 using namespace NSWFL::Registry;
+using namespace NSWFL::String;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -180,7 +180,7 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			CMathParser mathParser;
-			CStringBuilder errorText;
+			StringBuilder errorText;
 
 			gbUseWriteCache = (IsDlgButtonChecked(hWnd, IDC_ALLOWCACHING) == BST_CHECKED);
 

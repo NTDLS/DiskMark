@@ -9,3 +9,4 @@
 *.exe
 *.ilk
 *.user
+*.ipch

@@ -18,23 +18,11 @@
     <Filter Include="Classes &amp; Libraries\NSWFL">
       <UniqueIdentifier>{da7a1d30-dc21-4d52-8d83-ad2b91c5ba6a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Classes &amp; Libraries\CMemPool">
-      <UniqueIdentifier>{601c3241-1452-4487-b9d8-e4ff03913698}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Classes &amp; Libraries\CCmdLine">
-      <UniqueIdentifier>{7b51aab3-2f3f-49a4-a12f-96b4e4e36acb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Classes &amp; Libraries\CGraph">
       <UniqueIdentifier>{56052766-2cf4-4405-9c2b-6f0baaea7842}</UniqueIdentifier>
     </Filter>
     <Filter Include="Classes &amp; Libraries\CMathParser">
       <UniqueIdentifier>{23abc6eb-1760-4787-ab95-a49793025bb9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Classes &amp; Libraries\CStringBuilder">
-      <UniqueIdentifier>{8a7d8375-3f7c-46d7-829d-9e889296306d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Classes &amp; Libraries\CDuration">
-      <UniqueIdentifier>{ca153356-e753-4680-84f1-94f7bc80cd3a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -59,23 +47,11 @@
     <ClInclude Include="Resources\resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="CCmdLine\CCmdLine.H">
-      <Filter>Classes &amp; Libraries\CCmdLine</Filter>
-    </ClInclude>
-    <ClInclude Include="CDuration\CDuration.h">
-      <Filter>Classes &amp; Libraries\CDuration</Filter>
-    </ClInclude>
     <ClInclude Include="CGraph\CGraph.H">
       <Filter>Classes &amp; Libraries\CGraph</Filter>
     </ClInclude>
     <ClInclude Include="CMathParser\CMathParser.h">
       <Filter>Classes &amp; Libraries\CMathParser</Filter>
-    </ClInclude>
-    <ClInclude Include="CMemPool\CMemPool.H">
-      <Filter>Classes &amp; Libraries\CMemPool</Filter>
-    </ClInclude>
-    <ClInclude Include="CStringBuilder\CStringBuilder.H">
-      <Filter>Classes &amp; Libraries\CStringBuilder</Filter>
     </ClInclude>
     <ClInclude Include="NSWFL\NSWFL.h">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
@@ -125,6 +101,27 @@
     <ClInclude Include="NSWFL\NSWFL_Windows.H">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_CommandLineParser.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_HighPrecisionTimer.h">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_InsecureInterface.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_MemoryPool.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_StringBuilder.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_StringBuilderArray.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_Debug.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Entry.Cpp">
@@ -145,23 +142,11 @@
     <ClCompile Include="Dialogs\NetLogoDlg.Cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="CCmdLine\CCmdLine.Cpp">
-      <Filter>Classes &amp; Libraries\CCmdLine</Filter>
-    </ClCompile>
-    <ClCompile Include="CDuration\CDuration.cpp">
-      <Filter>Classes &amp; Libraries\CDuration</Filter>
-    </ClCompile>
     <ClCompile Include="CGraph\CGraph.Cpp">
       <Filter>Classes &amp; Libraries\CGraph</Filter>
     </ClCompile>
     <ClCompile Include="CMathParser\CMathParser.cpp">
       <Filter>Classes &amp; Libraries\CMathParser</Filter>
-    </ClCompile>
-    <ClCompile Include="CMemPool\CMemPool.Cpp">
-      <Filter>Classes &amp; Libraries\CMemPool</Filter>
-    </ClCompile>
-    <ClCompile Include="CStringBuilder\CStringBuilder.Cpp">
-      <Filter>Classes &amp; Libraries\CStringBuilder</Filter>
     </ClCompile>
     <ClCompile Include="NSWFL\NSWFL_Conversion.Cpp">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
@@ -208,6 +193,24 @@
     <ClCompile Include="NSWFL\NSWFL_Windows.Cpp">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_CommandLineParser.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_HighPrecisionTimer.cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_InsecureInterface.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_MemoryPool.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_StringBuilder.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_Debug.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\DiskMark.rc">
@@ -220,6 +223,15 @@
     </None>
     <None Include="Resources\MainIcon.ico">
       <Filter>Resources</Filter>
+    </None>
+    <None Include="NSWFL\.gitignore">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </None>
+    <None Include="NSWFL\LICENSE">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </None>
+    <None Include="NSWFL\README.md">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </None>
   </ItemGroup>
 </Project>

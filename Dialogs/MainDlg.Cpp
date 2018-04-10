@@ -11,7 +11,6 @@
 
 #include "../NSWFL/NSWFL.H"
 #include "../CGraph/CGraph.H"
-#include "../CDuration/CDuration.H"
 
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"
@@ -25,6 +24,7 @@
 using namespace NSWFL::Windows;
 using namespace NSWFL::Conversion;
 using namespace NSWFL::File;
+using namespace NSWFL::HighPrecisionTimer;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -181,7 +181,7 @@ bool PerformWriteTests(const char *sDrive, int iBufferSize, int iRuns, int iRoun
 
 	SetThreadAffinityMask(GetCurrentThread(), 0);
 
-	CDuration timer;
+	HighPrecisionTimer timer;
 
     char *sBuf = NULL;
 	char sFileName[MAX_PATH];

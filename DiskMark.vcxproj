@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E1627A40-B36D-4EF3-AD74-4949479BB10B}</ProjectGuid>
     <RootNamespace>DiskMark</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -281,25 +282,28 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CCmdLine\CCmdLine.H" />
-    <ClInclude Include="CDuration\CDuration.h" />
     <ClInclude Include="CGraph\CGraph.H" />
     <ClInclude Include="CMathParser\CMathParser.h" />
-    <ClInclude Include="CMemPool\CMemPool.H" />
-    <ClInclude Include="CStringBuilder\CStringBuilder.H" />
     <ClInclude Include="NSWFL\NSWFL.h" />
+    <ClInclude Include="NSWFL\NSWFL_CommandLineParser.H" />
     <ClInclude Include="NSWFL\NSWFL_Conversion.H" />
     <ClInclude Include="NSWFL\NSWFL_DateTime.H" />
+    <ClInclude Include="NSWFL\NSWFL_Debug.H" />
     <ClInclude Include="NSWFL\NSWFL_File.H" />
     <ClInclude Include="NSWFL\NSWFL_Graphics.H" />
+    <ClInclude Include="NSWFL\NSWFL_HighPrecisionTimer.h" />
+    <ClInclude Include="NSWFL\NSWFL_InsecureInterface.H" />
     <ClInclude Include="NSWFL\NSWFL_KeyGeneration.H" />
     <ClInclude Include="NSWFL\NSWFL_ListBox.H" />
     <ClInclude Include="NSWFL\NSWFL_ListView.H" />
     <ClInclude Include="NSWFL\NSWFL_Math.H" />
     <ClInclude Include="NSWFL\NSWFL_Memory.H" />
+    <ClInclude Include="NSWFL\NSWFL_MemoryPool.H" />
     <ClInclude Include="NSWFL\NSWFL_Menu.H" />
     <ClInclude Include="NSWFL\NSWFL_Registry.H" />
     <ClInclude Include="NSWFL\NSWFL_String.H" />
+    <ClInclude Include="NSWFL\NSWFL_StringBuilder.H" />
+    <ClInclude Include="NSWFL\NSWFL_StringBuilderArray.H" />
     <ClInclude Include="NSWFL\NSWFL_System.H" />
     <ClInclude Include="NSWFL\NSWFL_Types.H" />
     <ClInclude Include="NSWFL\NSWFL_Windows.H" />
@@ -312,24 +316,26 @@
     <ClInclude Include="Resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CCmdLine\CCmdLine.Cpp" />
-    <ClCompile Include="CDuration\CDuration.cpp" />
     <ClCompile Include="CGraph\CGraph.Cpp" />
     <ClCompile Include="CMathParser\CMathParser.cpp" />
-    <ClCompile Include="CMemPool\CMemPool.Cpp" />
-    <ClCompile Include="CStringBuilder\CStringBuilder.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_CommandLineParser.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Conversion.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_DateTime.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Debug.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_File.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Graphics.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_HighPrecisionTimer.cpp" />
+    <ClCompile Include="NSWFL\NSWFL_InsecureInterface.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_KeyGeneration.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_ListBox.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_ListView.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Math.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Memory.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_MemoryPool.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Menu.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Registry.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_String.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_StringBuilder.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_System.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Types.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Windows.Cpp" />
@@ -386,6 +392,9 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="NSWFL\.gitignore" />
+    <None Include="NSWFL\LICENSE" />
+    <None Include="NSWFL\README.md" />
     <None Include="Resources\handcurs.cur" />
     <None Include="Resources\MainIcon.ico" />
   </ItemGroup>
