@@ -24,7 +24,7 @@
 using namespace NSWFL::Windows;
 using namespace NSWFL::Conversion;
 using namespace NSWFL::File;
-using namespace NSWFL::HighPrecisionTimer;
+using namespace NSWFL::DateTime;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

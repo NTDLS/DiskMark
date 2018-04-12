@@ -285,14 +285,17 @@
     <ClInclude Include="CGraph\CGraph.H" />
     <ClInclude Include="CMathParser\CMathParser.h" />
     <ClInclude Include="NSWFL\NSWFL.h" />
+    <ClInclude Include="NSWFL\NSWFL_Base64.h" />
     <ClInclude Include="NSWFL\NSWFL_CommandLineParser.H" />
     <ClInclude Include="NSWFL\NSWFL_Conversion.H" />
+    <ClInclude Include="NSWFL\NSWFL_CRC32.H" />
     <ClInclude Include="NSWFL\NSWFL_DateTime.H" />
     <ClInclude Include="NSWFL\NSWFL_Debug.H" />
     <ClInclude Include="NSWFL\NSWFL_File.H" />
     <ClInclude Include="NSWFL\NSWFL_Graphics.H" />
     <ClInclude Include="NSWFL\NSWFL_HighPrecisionTimer.h" />
     <ClInclude Include="NSWFL\NSWFL_InsecureInterface.H" />
+    <ClInclude Include="NSWFL\NSWFL_IsolationLock.h" />
     <ClInclude Include="NSWFL\NSWFL_KeyGeneration.H" />
     <ClInclude Include="NSWFL\NSWFL_ListBox.H" />
     <ClInclude Include="NSWFL\NSWFL_ListView.H" />
@@ -300,13 +303,23 @@
     <ClInclude Include="NSWFL\NSWFL_Memory.H" />
     <ClInclude Include="NSWFL\NSWFL_MemoryPool.H" />
     <ClInclude Include="NSWFL\NSWFL_Menu.H" />
+    <ClInclude Include="NSWFL\NSWFL_Queue.H" />
     <ClInclude Include="NSWFL\NSWFL_Registry.H" />
+    <ClInclude Include="NSWFL\NSWFL_SHA1.h" />
+    <ClInclude Include="NSWFL\NSWFL_Stack.H" />
     <ClInclude Include="NSWFL\NSWFL_String.H" />
     <ClInclude Include="NSWFL\NSWFL_StringBuilder.H" />
     <ClInclude Include="NSWFL\NSWFL_StringBuilderArray.H" />
     <ClInclude Include="NSWFL\NSWFL_System.H" />
     <ClInclude Include="NSWFL\NSWFL_Types.H" />
+    <ClInclude Include="NSWFL\NSWFL_URLEncoding.H" />
+    <ClInclude Include="NSWFL\NSWFL_VectorBinary.H" />
+    <ClInclude Include="NSWFL\NSWFL_VectorString.H" />
+    <ClInclude Include="NSWFL\NSWFL_VectorT.H" />
     <ClInclude Include="NSWFL\NSWFL_Windows.H" />
+    <ClInclude Include="NSWFL\NSWFL_XML.H" />
+    <ClInclude Include="NSWFL\NSWFL_XMLReader.H" />
+    <ClInclude Include="NSWFL\NSWFL_XMLWriter.H" />
     <ClInclude Include="Source\Entry.H" />
     <ClInclude Include="Source\Init.H" />
     <ClInclude Include="Source\Routines.H" />
@@ -318,14 +331,17 @@
   <ItemGroup>
     <ClCompile Include="CGraph\CGraph.Cpp" />
     <ClCompile Include="CMathParser\CMathParser.cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Base64.cpp" />
     <ClCompile Include="NSWFL\NSWFL_CommandLineParser.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Conversion.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_CRC32.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_DateTime.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Debug.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_File.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Graphics.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_HighPrecisionTimer.cpp" />
     <ClCompile Include="NSWFL\NSWFL_InsecureInterface.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_IsolationLock.cpp" />
     <ClCompile Include="NSWFL\NSWFL_KeyGeneration.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_ListBox.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_ListView.Cpp" />
@@ -333,12 +349,18 @@
     <ClCompile Include="NSWFL\NSWFL_Memory.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_MemoryPool.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Menu.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Queue.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Registry.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_SHA1.cpp" />
+    <ClCompile Include="NSWFL\NSWFL_Stack.cpp" />
     <ClCompile Include="NSWFL\NSWFL_String.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_StringBuilder.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_System.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Types.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_URLEncoding.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_Windows.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_XMLReader.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_XMLWriter.Cpp" />
     <ClCompile Include="Source\Entry.Cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -392,6 +414,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="NSWFL\.git" />
     <None Include="NSWFL\.gitignore" />
     <None Include="NSWFL\LICENSE" />
     <None Include="NSWFL\README.md" />
