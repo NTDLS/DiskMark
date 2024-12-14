@@ -30,13 +30,13 @@ void OpenHelp(HWND hWnd)
 	char sDrive[MAX_PATH];
 	char sDir[MAX_PATH];
 
-	if(GetModuleFileName(ghAppInstance, sFileName, sizeof(sFileName)))
+	if (GetModuleFileName(ghAppInstance, sFileName, sizeof(sFileName)))
 	{
 		_splitpath_s(sFileName, sDrive, sizeof(sDrive), sDir, sizeof(sDir), NULL, 0, NULL, 0);
 		_makepath_s(sFileName, sizeof(sFileName), sDrive, sDir, "help", ".chm");
 		_makepath_s(sPath, sizeof(sPath), sDrive, sDir, NULL, NULL);
 
-		if(ShellExecute(hWnd, "OPEN", sFileName, NULL, sPath, SW_SHOWDEFAULT) <= (HINSTANCE)32)
+		if (ShellExecute(hWnd, "OPEN", sFileName, NULL, sPath, SW_SHOWDEFAULT) <= (HINSTANCE)32)
 		{
 			MessageBox(hWnd, "Cannot locate the Help File.", gsTitleCaption, MB_ICONERROR);
 		}
@@ -45,7 +45,7 @@ void OpenHelp(HWND hWnd)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int SectorAlign(const char *sDrive, int iBufferSize)
+int SectorAlign(const char* sDrive, int iBufferSize)
 {
 	char sFileName[MAX_PATH];
 
@@ -59,14 +59,14 @@ int SectorAlign(const char *sDrive, int iBufferSize)
 		GENERIC_WRITE,
 		0,
 		NULL,
-		CREATE_ALWAYS, 
+		CREATE_ALWAYS,
 		FILE_FLAG_WRITE_THROUGH | FILE_FLAG_NO_BUFFERING,
 		NULL
 	);
 
-	if((iBufferSize % 512) != 1)
+	if ((iBufferSize % 512) != 1)
 	{
-		if(iBufferSize > 512)
+		if (iBufferSize > 512)
 		{
 			iBufferSize -= iBufferSize % 512;
 		}
@@ -78,13 +78,13 @@ int SectorAlign(const char *sDrive, int iBufferSize)
 	DWORD dwBytesWritten = 0;
 	DWORD dwBytesToWrite = iBufferSize;
 
-	char *sBuffer = (char *) calloc(iBufferSize + 1025, 1);
+	char* sBuffer = (char*)calloc(iBufferSize + 1025, 1);
 
-	for(DWORD iTries = 0; iTries < 1024; iTries++)
+	for (DWORD iTries = 0; iTries < 1024; iTries++)
 	{
-		if(WriteFile(hFile, sBuffer, dwBytesToWrite, &dwBytesWritten, NULL))
+		if (WriteFile(hFile, sBuffer, dwBytesToWrite, &dwBytesWritten, NULL))
 		{
-			if(dwBytesWritten == dwBytesToWrite)
+			if (dwBytesWritten == dwBytesToWrite)
 			{
 				CloseHandle(hFile);
 				DeleteFile(sFileName);

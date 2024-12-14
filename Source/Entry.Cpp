@@ -41,28 +41,28 @@ MemoryPool gMem;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 #else
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevious, LPSTR sCmdLine, int iCmdShow)
 #endif
 {
-    #ifdef _DEBUG
+#ifdef _DEBUG
 	ghAppInstance = GetModuleHandle(NULL);
-    #else
+#else
 	ghAppInstance = hInstance;
-    #endif
+#endif
 
-	if(!InitializeApp())
-    {
-        return 1;
-    }
+	if (!InitializeApp())
+	{
+		return 1;
+	}
 
 	DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_MAIN), NULL, MainDialog);
 
-    if(!UninitializeApp())
-    {
-        return 1;
-    }
+	if (!UninitializeApp())
+	{
+		return 1;
+	}
 
 	return 0;
 }

@@ -2,15 +2,15 @@
 #define _NETLOGODLG_H
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct _AboutDialogInfo{
-    char *BuildDate;
-    char *BuildTime;
-    char *CopyRight;
-    char *FileVersion;
-    char *TitleCaption;
-    HICON DisplayIcon;
-    HWND OwnerHandle;
-} ABOUTDLGINFO, *LPABOUTDLGINFO;
+typedef struct _AboutDialogInfo {
+	char* BuildDate;
+	char* BuildTime;
+	char* CopyRight;
+	char* FileVersion;
+	char* TitleCaption;
+	HICON DisplayIcon;
+	HWND OwnerHandle;
+} ABOUTDLGINFO, * LPABOUTDLGINFO;
 
 extern LPABOUTDLGINFO glpADI;
 

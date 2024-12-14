@@ -291,10 +291,13 @@
     <ClInclude Include="NSWFL\NSWFL_CRC32.H" />
     <ClInclude Include="NSWFL\NSWFL_DateTime.H" />
     <ClInclude Include="NSWFL\NSWFL_Debug.H" />
+    <ClInclude Include="NSWFL\NSWFL_DictionaryString.H" />
+    <ClInclude Include="NSWFL\NSWFL_DictionaryT.H" />
     <ClInclude Include="NSWFL\NSWFL_File.H" />
     <ClInclude Include="NSWFL\NSWFL_Graphics.H" />
     <ClInclude Include="NSWFL\NSWFL_HighPrecisionTimer.h" />
     <ClInclude Include="NSWFL\NSWFL_InsecureInterface.H" />
+    <ClInclude Include="NSWFL\NSWFL_IntegerStack.H" />
     <ClInclude Include="NSWFL\NSWFL_IsolationLock.h" />
     <ClInclude Include="NSWFL\NSWFL_KeyGeneration.H" />
     <ClInclude Include="NSWFL\NSWFL_ListBox.H" />
@@ -341,6 +344,7 @@
     <ClCompile Include="NSWFL\NSWFL_Graphics.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_HighPrecisionTimer.cpp" />
     <ClCompile Include="NSWFL\NSWFL_InsecureInterface.Cpp" />
+    <ClCompile Include="NSWFL\NSWFL_IntegerStack.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_IsolationLock.cpp" />
     <ClCompile Include="NSWFL\NSWFL_KeyGeneration.Cpp" />
     <ClCompile Include="NSWFL\NSWFL_ListBox.Cpp" />

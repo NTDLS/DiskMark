@@ -27,7 +27,7 @@ typedef struct _tag_Graph_Settings {
 	bool UniformScaling;
 	int SpacingTop;
 	int SpacingBottom;
-} GRAPHSETTINGS, *LPGRAPHSETTINGS;
+} GRAPHSETTINGS, * LPGRAPHSETTINGS;
 
 typedef struct _tag_Graph_Config {
 	long Height;
@@ -35,13 +35,13 @@ typedef struct _tag_Graph_Config {
 	short SeriesCount;
 	short GridOffset;
 	HWND hWnd;
-} GRAPHCONFIG, *LPGRAPHCONFIG;
+} GRAPHCONFIG, * LPGRAPHCONFIG;
 
 typedef struct _tag_Graph_Stats {
 	double MinimumRange;			// The minimum value that the graph should scale to.
 	double HighestValue;			// The highest value in the values array (*Values).
 	double TopValue;				// The value represented at the top of the graph.
-} GRAPHSTATS, *LPGRAPHSTATS;
+} GRAPHSTATS, * LPGRAPHSTATS;
 
 typedef struct _tag_Text_Arrtibutes {
 	HDC DC;
@@ -54,34 +54,34 @@ typedef struct _tag_Text_Arrtibutes {
 
 	char FontName[255];
 	int FontSize;
-} GRAPHTEXTATTRIBUTES, *LPGRAPHTEXTATTRIBUTES;
+} GRAPHTEXTATTRIBUTES, * LPGRAPHTEXTATTRIBUTES;
 
-typedef struct _tag_Series{
+typedef struct _tag_Series {
 	short Index;					// The index of the series in the series array.
-	double *Values;					// Array of floating point values that make up the graph.
-	POINT *pPoints;					// The GDI points that will be drawn one the background.
+	double* Values;					// Array of floating point values that make up the graph.
+	POINT* pPoints;					// The GDI points that will be drawn one the background.
 	DWORD LineColor;				// The line-color for this series.
 	double MinimumRange;			// The minimum value that the graph should scale to.
 	double HighestValue;			// The highest value in the values array (*Values).
 	double TopValue;				// The value represented at the top of the graph.
 	double CurrentScale;			// Decimal value of the current graph scale (based on MinimumRange).
 	double LastValue;				// The last value added to the values array (*Values).
-	void *pTextFormatCallback;		// The text formatter callback for this series.
-} GRAPHSERIES, *LPGRAPHSERIES;
+	void* pTextFormatCallback;		// The text formatter callback for this series.
+} GRAPHSERIES, * LPGRAPHSERIES;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CGraph {
 
 public:
-	typedef bool (* GraphTextFormatCallback)(CGraph *pGraph, GRAPHSERIES *pSeries, GRAPHTEXTATTRIBUTES *pTextAttributes);
+	typedef bool (*GraphTextFormatCallback)(CGraph* pGraph, GRAPHSERIES* pSeries, GRAPHTEXTATTRIBUTES* pTextAttributes);
 
 	CGraph();
 	~CGraph();
 	CGraph(HWND hWnd, DWORD dwINBGColor, DWORD dwINGridColor, short iINGridSpacing, short iINDirection, bool bUniformScaling);
 
 	GRAPHSETTINGS Settings;
-	GRAPHSERIES *Series;
+	GRAPHSERIES* Series;
 
 	void AddSeries(DWORD dwINLineColor, double dINMinimumRange);
 	void AddSeries(DWORD dwINLineColor, double dINMinimumRange, GraphTextFormatCallback pGraphTextFormatCallback);
@@ -89,7 +89,7 @@ public:
 	void Initialize(HWND hWnd, DWORD dwINBGColor, DWORD dwINGridColor, short iINGridSpacing, short iINDirection, bool bUniformScaling);
 
 	bool Update(double dValue);
-	bool Update(double *dValues);
+	bool Update(double* dValues);
 	bool Update(short iSeries, double dValue);
 
 	//void Resize(int iX, int iY, int iInWidth, int iInHeight);
@@ -110,7 +110,7 @@ public:
 	void SpacingTop(int Pixles);
 	int SpacingBottom(void);
 	void SpacingBottom(int Pixles);
-	void WriteText(GRAPHTEXTATTRIBUTES *gta);
+	void WriteText(GRAPHTEXTATTRIBUTES* gta);
 
 	void UnLock(void);
 	bool TryLock(void);
@@ -119,7 +119,7 @@ public:
 protected:
 	WNDPROC _OldGraphProc;
 
-	POINT *Points;
+	POINT* Points;
 	GRAPHSTATS Stats;
 	GRAPHCONFIG Config;
 

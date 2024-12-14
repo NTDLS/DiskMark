@@ -161,6 +161,15 @@
     <ClInclude Include="NSWFL\NSWFL_XMLWriter.H">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_DictionaryString.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_DictionaryT.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
+    <ClInclude Include="NSWFL\NSWFL_IntegerStack.H">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Entry.Cpp">
@@ -275,6 +284,9 @@
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </ClCompile>
     <ClCompile Include="NSWFL\NSWFL_XMLWriter.Cpp">
+      <Filter>Classes &amp; Libraries\NSWFL</Filter>
+    </ClCompile>
+    <ClCompile Include="NSWFL\NSWFL_IntegerStack.Cpp">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </ClCompile>
   </ItemGroup>

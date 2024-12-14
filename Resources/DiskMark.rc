@@ -189,7 +189,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,8
+ FILEVERSION 1,0,2,0
  PRODUCTVERSION 1,0,0,8
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
@@ -208,12 +208,12 @@ BEGIN
             VALUE "Comments", "Disk Benchmarking Utility"
             VALUE "CompanyName", "NetworkDLS"
             VALUE "FileDescription", "Disk Benchmarking Utility"
-            VALUE "FileVersion", "1.0.0.8"
+            VALUE "FileVersion", "1.0.2.0"
             VALUE "InternalName", "DiskMark"
-            VALUE "LegalCopyright", "Copyright © 2018 NetworkDLS"
+            VALUE "LegalCopyright", "Copyright © 2025 NetworkDLS"
             VALUE "OriginalFilename", "DiskMark.exe"
             VALUE "ProductName", "DiskMark"
-            VALUE "ProductVersion", "1.0.0.8"
+            VALUE "ProductVersion", "1.0.2.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -255,8 +255,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_TITLECAPTION        "DiskMark"
-    IDS_FILEVERSION         "1.0.0.8"
-    IDS_APPCOPYRIGHT        "Copyright © 2018 NetworkDLS. All rights reserved."
+    IDS_FILEVERSION         "1.0.2.0"
+    IDS_APPCOPYRIGHT        "Copyright © 2025 NetworkDLS. All rights reserved."
     IDS_REGISTRYKEY         "Software\\NetWorkDLS\\DiskMark"
 END
 

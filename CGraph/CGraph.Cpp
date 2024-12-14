@@ -23,24 +23,24 @@ using namespace NSWFL::Conversion;
 
 LRESULT NewGraphProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	CGraph *lpG = (CGraph *) GetProp(hWnd, "Class");
-	if(lpG)
+	CGraph* lpG = (CGraph*)GetProp(hWnd, "Class");
+	if (lpG)
 	{
-		if(lpG->Settings.IsInitialized)
+		if (lpG->Settings.IsInitialized)
 		{
 			//--------------------------------------------------------------------------
-			if(uMsg == WM_PAINT)
+			if (uMsg == WM_PAINT)
 			{
 				HDC hGraphDC;
 				PAINTSTRUCT psGraph;
-				if((hGraphDC = BeginPaint(hWnd, &psGraph)))
+				if ((hGraphDC = BeginPaint(hWnd, &psGraph)))
 				{
 					lpG->Redraw(hGraphDC);
 					EndPaint(hWnd, &psGraph);
 				}
 			}
 
-			return CallWindowProc(lpG->_OldGraphProc, hWnd, uMsg, wParam, lParam); 
+			return CallWindowProc(lpG->_OldGraphProc, hWnd, uMsg, wParam, lParam);
 		}
 	}
 	return 0;
@@ -70,7 +70,7 @@ CGraph::~CGraph()
 
 void CGraph::Redraw(void)
 {
-	if(this->TryLock())
+	if (this->TryLock())
 	{
 		HDC hGraphDC = GetDC(this->Config.hWnd);
 		this->Redraw(hGraphDC);
@@ -82,16 +82,16 @@ void CGraph::Redraw(void)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CGraph::WriteText(GRAPHTEXTATTRIBUTES *pGTA)
+void CGraph::WriteText(GRAPHTEXTATTRIBUTES* pGTA)
 {
 	int iYPixels = GetDeviceCaps(pGTA->DC, LOGPIXELSY);
 	int iFontHeight = -MulDiv(pGTA->FontSize, iYPixels, 72);
 
 	HFONT hFont = CreateFont(
 		iFontHeight,
-		0,0,0,
+		0, 0, 0,
 		FW_NORMAL,
-		0,0,0,
+		0, 0, 0,
 		ANSI_CHARSET,
 		OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS,
@@ -114,64 +114,64 @@ void CGraph::WriteText(GRAPHTEXTATTRIBUTES *pGTA)
 
 void CGraph::Redraw(HDC hGraphDC)
 {
-	if(!this->TryLock())
+	if (!this->TryLock())
 	{
 		return;
 	}
 
 	RECT rc;
-    HPEN hPen1;
-    HBITMAP MemBM;
-    HBITMAP OldBM;
-    HGDIOBJ GdiObj;
-    int x;
-    long y;
+	HPEN hPen1;
+	HBITMAP MemBM;
+	HBITMAP OldBM;
+	HGDIOBJ GdiObj;
+	int x;
+	long y;
 
 	memset(&rc, 0, sizeof(rc));
 	rc.left = this->Config.Width;
 	rc.bottom = this->Config.Height;
 
-    HBRUSH hBGBrush = CreateSolidBrush(this->Settings.BGColor);
+	HBRUSH hBGBrush = CreateSolidBrush(this->Settings.BGColor);
 
-    hPen1 = CreatePen(PS_SOLID, 0, this->Settings.GridColor);
+	hPen1 = CreatePen(PS_SOLID, 0, this->Settings.GridColor);
 
-    HDC MemDC = CreateCompatibleDC(hGraphDC);
+	HDC MemDC = CreateCompatibleDC(hGraphDC);
 
-    //Create a bitmap big enough for the client rectangle
-    MemBM = CreateCompatibleBitmap(hGraphDC, this->Config.Width, this->Config.Height);
-    OldBM = (HBITMAP) SelectObject(MemDC, MemBM);
+	//Create a bitmap big enough for the client rectangle
+	MemBM = CreateCompatibleBitmap(hGraphDC, this->Config.Width, this->Config.Height);
+	OldBM = (HBITMAP)SelectObject(MemDC, MemBM);
 
-    // Draw the Grid
-    FillRect(MemDC, &rc, hBGBrush);
+	// Draw the Grid
+	FillRect(MemDC, &rc, hBGBrush);
 
-    SelectObject(MemDC, hPen1);
+	SelectObject(MemDC, hPen1);
 
-    for(x = this->Config.GridOffset; x <= this->Config.Width; x = x + this->Settings.SpacingX)
-    {
-        MoveToEx(MemDC, x, 0, NULL);
-        LineTo(MemDC, x, this->Config.Height);
-    }
+	for (x = this->Config.GridOffset; x <= this->Config.Width; x = x + this->Settings.SpacingX)
+	{
+		MoveToEx(MemDC, x, 0, NULL);
+		LineTo(MemDC, x, this->Config.Height);
+	}
 
-    for(y = 0; y <= this->Config.Height; y = y + this->Settings.SpacingY)
-    {
-        MoveToEx(MemDC, 0, y, NULL);
-        LineTo(MemDC, this->Config.Width, y);
-    }
+	for (y = 0; y <= this->Config.Height; y = y + this->Settings.SpacingY)
+	{
+		MoveToEx(MemDC, 0, y, NULL);
+		LineTo(MemDC, this->Config.Width, y);
+	}
 
-    // Now to draw the graph in one pass
-	for(short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
+	// Now to draw the graph in one pass
+	for (short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
 	{
 		//Draw lines:
 		HPEN hPen2 = CreatePen(PS_SOLID, 0, this->Series[iSeries].LineColor);
 		SelectObject(MemDC, hPen2);
-	    Polyline(MemDC, this->Series[iSeries].pPoints, this->Config.Width + 1);
-	    DeleteObject(hPen2);
+		Polyline(MemDC, this->Series[iSeries].pPoints, this->Config.Width + 1);
+		DeleteObject(hPen2);
 	}
 
 	GRAPHTEXTATTRIBUTES gta;
 	memset(&gta, 0, sizeof(gta));
 
-	if(this->Settings.Direction == GRAPH_LEFT)
+	if (this->Settings.Direction == GRAPH_LEFT)
 	{
 		gta.x = this->Config.Width;
 	}
@@ -186,22 +186,22 @@ void CGraph::Redraw(HDC hGraphDC)
 	strcpy_s(gta.FontName, sizeof(gta.FontName), "Courier");
 
 	//Write Text
-	for(short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
+	for (short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
 	{
-		if(this->Series[iSeries].pTextFormatCallback)
+		if (this->Series[iSeries].pTextFormatCallback)
 		{
 			gta.BGColor = this->Series[iSeries].LineColor;
 
-			if(((GraphTextFormatCallback)this->Series[iSeries].pTextFormatCallback)(this, &this->Series[iSeries], &gta))
+			if (((GraphTextFormatCallback)this->Series[iSeries].pTextFormatCallback)(this, &this->Series[iSeries], &gta))
 			{
 				int iYPixels = GetDeviceCaps(gta.DC, LOGPIXELSY);
 				int iFontHeight = -MulDiv(gta.FontSize, iYPixels, 72);
 
 				HFONT hFont = CreateFont(
 					iFontHeight,
-					0,0,0,
+					0, 0, 0,
 					FW_NORMAL,
-					0,0,0,
+					0, 0, 0,
 					ANSI_CHARSET,
 					OUT_TT_PRECIS,
 					CLIP_DEFAULT_PRECIS,
@@ -215,7 +215,7 @@ void CGraph::Redraw(HDC hGraphDC)
 				SIZE FontSize;
 				GetTextExtentPoint32(gta.DC, gta.Text, (int)strlen(gta.Text), &FontSize);
 
-				if(this->Settings.Direction == GRAPH_LEFT)
+				if (this->Settings.Direction == GRAPH_LEFT)
 				{
 					gta.x -= FontSize.cx + 3;
 				}
@@ -225,7 +225,7 @@ void CGraph::Redraw(HDC hGraphDC)
 				SetBkColor(gta.DC, gta.BGColor);
 				TextOut(gta.DC, gta.x, gta.y, gta.Text, (int)strlen(gta.Text));
 
-				if(this->Settings.Direction == GRAPH_RIGHT)
+				if (this->Settings.Direction == GRAPH_RIGHT)
 				{
 					gta.x += FontSize.cx + 3;
 				}
@@ -235,17 +235,17 @@ void CGraph::Redraw(HDC hGraphDC)
 		}
 	}
 
-    BitBlt(hGraphDC, 0, 0, this->Config.Width, this->Config.Height, MemDC, 0, 0, SRCCOPY);
+	BitBlt(hGraphDC, 0, 0, this->Config.Width, this->Config.Height, MemDC, 0, 0, SRCCOPY);
 
-    GdiObj = SelectObject(MemDC, OldBM);
+	GdiObj = SelectObject(MemDC, OldBM);
 
-    // Clean up after ourselves to prevent resource leaks.
-    DeleteDC(MemDC);
-    DeleteObject(hBGBrush);
-    DeleteObject(hPen1);
-    DeleteObject(OldBM);
-    DeleteObject(MemBM);
-    DeleteObject(GdiObj);
+	// Clean up after ourselves to prevent resource leaks.
+	DeleteDC(MemDC);
+	DeleteObject(hBGBrush);
+	DeleteObject(hPen1);
+	DeleteObject(OldBM);
+	DeleteObject(MemBM);
+	DeleteObject(GdiObj);
 
 	this->UnLock();
 }
@@ -263,14 +263,14 @@ void CGraph::AddSeries(DWORD dwINLineColor, double dINMinimumRange, GraphTextFor
 {
 	this->Lock();
 
-	if(dINMinimumRange < 1)
+	if (dINMinimumRange < 1)
 	{
 		dINMinimumRange = 1; //The minimum cannot be zero.
 	}
 
 	int iMemory = 0;
 
-	this->Series = (GRAPHSERIES *) realloc(this->Series, (this->Config.SeriesCount + 1) *  sizeof(GRAPHSERIES));
+	this->Series = (GRAPHSERIES*)realloc(this->Series, (this->Config.SeriesCount + 1) * sizeof(GRAPHSERIES));
 
 	memset(&this->Series[this->Config.SeriesCount], 0, sizeof(GRAPHSERIES));
 
@@ -280,16 +280,16 @@ void CGraph::AddSeries(DWORD dwINLineColor, double dINMinimumRange, GraphTextFor
 	this->Series[this->Config.SeriesCount].CurrentScale = 1;
 	this->Series[this->Config.SeriesCount].Index = this->Config.SeriesCount;
 
-	this->Series[this->Config.SeriesCount].pPoints = (POINT *) calloc(this->Config.Width + 1, sizeof(POINT));
-	this->Series[this->Config.SeriesCount].Values = (double *) calloc(this->Config.Width + 1, sizeof(double));
+	this->Series[this->Config.SeriesCount].pPoints = (POINT*)calloc(this->Config.Width + 1, sizeof(POINT));
+	this->Series[this->Config.SeriesCount].Values = (double*)calloc(this->Config.Width + 1, sizeof(double));
 
-	for(int i = 0; i <= this->Config.Width; i++)
+	for (int i = 0; i <= this->Config.Width; i++)
 	{
 		this->Series[this->Config.SeriesCount].pPoints[i].x = i;
 		this->Series[this->Config.SeriesCount].pPoints[i].y = this->Config.Height;
 	}
 
-	if(dINMinimumRange > this->Stats.MinimumRange)
+	if (dINMinimumRange > this->Stats.MinimumRange)
 	{
 		this->Stats.MinimumRange = dINMinimumRange;
 	}
@@ -309,19 +309,19 @@ void CGraph::Initialize(HWND hWnd, DWORD dwINBGColor, DWORD dwINGridColor, short
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CGraph::Initialize(HWND hWnd, DWORD dwINBGColor, DWORD dwINGridColor,
-		short iINGridSpacing, short iINDirection, bool bUniformScaling, bool bInitCS)
+	short iINGridSpacing, short iINDirection, bool bUniformScaling, bool bInitCS)
 {
-	if(bInitCS)
+	if (bInitCS)
 	{
 		InitializeCriticalSection(&this->csLock);
 		SetProp(hWnd, "Class", this);
 	}
 
-	this->_OldGraphProc = (WNDPROC) SetWindowLongPtr(hWnd, GWLP_WNDPROC, (INT_PTR)&NewGraphProc);
+	this->_OldGraphProc = (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (INT_PTR)&NewGraphProc);
 
-    RECT rc;
+	RECT rc;
 	memset(&rc, 0, sizeof(rc));
-    GetClientRect(hWnd, &rc);
+	GetClientRect(hWnd, &rc);
 
 	this->Series = NULL;
 	this->Points = NULL;
@@ -329,27 +329,27 @@ void CGraph::Initialize(HWND hWnd, DWORD dwINBGColor, DWORD dwINGridColor,
 	memset(&this->Stats, 0, sizeof(this->Stats));
 
 	memset(&this->Config, 0, sizeof(this->Config));
-	this->Config.hWnd        = hWnd;
-	this->Config.GridOffset  = 0;
+	this->Config.hWnd = hWnd;
+	this->Config.GridOffset = 0;
 	this->Config.SeriesCount = 0;
-	this->Config.Height      = rc.bottom-rc.top;
-	this->Config.Width       = rc.right-rc.left;
+	this->Config.Height = rc.bottom - rc.top;
+	this->Config.Width = rc.right - rc.left;
 
 	memset(&this->Settings, 0, sizeof(this->Settings));
-	this->Settings.SpacingX       = iINGridSpacing;
-    this->Settings.SpacingY       = iINGridSpacing;
-	this->Settings.BGColor        = dwINBGColor;
-    this->Settings.GridColor      = dwINGridColor;
-    this->Settings.IsFrozen       = false;
-    this->Settings.Direction      = iINDirection;
+	this->Settings.SpacingX = iINGridSpacing;
+	this->Settings.SpacingY = iINGridSpacing;
+	this->Settings.BGColor = dwINBGColor;
+	this->Settings.GridColor = dwINGridColor;
+	this->Settings.IsFrozen = false;
+	this->Settings.Direction = iINDirection;
 	this->Settings.UniformScaling = bUniformScaling;
-	this->Settings.IsInitialized  = true;
+	this->Settings.IsInitialized = true;
 
 	int iMemory = (this->Config.Width + 1) * sizeof(POINT);
-    this->Points = (POINT *) calloc( iMemory, 1);
-    memset(Points, 0, iMemory);
+	this->Points = (POINT*)calloc(iMemory, 1);
+	memset(Points, 0, iMemory);
 
-    ShowWindow(this->Config.hWnd, SW_SHOW);
+	ShowWindow(this->Config.hWnd, SW_SHOW);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,23 +358,23 @@ bool CGraph::Update(double dValue)
 {
 	this->Lock();
 
-	if(this->Settings.IsFrozen)
-    {
+	if (this->Settings.IsFrozen)
+	{
 		this->UnLock();
 		return false;
-    }
+	}
 
 	this->UnLock();
 
-	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW , (WPARAM)FALSE, (LPARAM)0);
+	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW, (WPARAM)FALSE, (LPARAM)0);
 
 	this->Lock();
 
 	bool bResult = false;
 
-	if(this->Config.SeriesCount == 1)
+	if (this->Config.SeriesCount == 1)
 	{
-		if(this->Settings.Direction == GRAPH_LEFT)
+		if (this->Settings.Direction == GRAPH_LEFT)
 		{
 			this->Config.GridOffset++;
 		}
@@ -384,13 +384,13 @@ bool CGraph::Update(double dValue)
 
 		bResult = this->Update(0, dValue);
 
-		if(this->Config.GridOffset == this->Settings.SpacingX || this->Config.GridOffset == -this->Settings.SpacingX)
+		if (this->Config.GridOffset == this->Settings.SpacingX || this->Config.GridOffset == -this->Settings.SpacingX)
 		{
 			this->Config.GridOffset = 0;
-		}	
+		}
 	}
 
-	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW , (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW, (WPARAM)TRUE, (LPARAM)0);
 
 	this->UnLock();
 
@@ -399,45 +399,45 @@ bool CGraph::Update(double dValue)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool CGraph::Update(double *dValues)
+bool CGraph::Update(double* dValues)
 {
 	this->Lock();
 
-	if(this->Settings.IsFrozen)
-    {
+	if (this->Settings.IsFrozen)
+	{
 		this->UnLock();
 		return false;
-    }
+	}
 
 	this->UnLock();
 
-	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW , (WPARAM)FALSE, (LPARAM)0);
+	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW, (WPARAM)FALSE, (LPARAM)0);
 
 	this->Lock();
 
 	bool bResult = false;
 
-	if(this->Settings.Direction == GRAPH_LEFT)
-    {
+	if (this->Settings.Direction == GRAPH_LEFT)
+	{
 		this->Config.GridOffset++;
-    }
-    else {
+	}
+	else {
 		this->Config.GridOffset--;
-    }
+	}
 
-	for(short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
+	for (short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
 	{
 		bResult = this->Update(iSeries, dValues[iSeries]);
 	}
 
-	if(this->Config.GridOffset == this->Settings.SpacingX || this->Config.GridOffset == -this->Settings.SpacingX)
+	if (this->Config.GridOffset == this->Settings.SpacingX || this->Config.GridOffset == -this->Settings.SpacingX)
 	{
 		this->Config.GridOffset = 0;
 	}
 
 	this->UnLock();
 
-	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW , (WPARAM)TRUE, (LPARAM)0);
+	SendMessage(this->Config.hWnd, (UINT)WM_SETREDRAW, (WPARAM)TRUE, (LPARAM)0);
 
 	return bResult;
 }
@@ -448,11 +448,11 @@ bool CGraph::Update(short iSeries, double dValue)
 {
 	this->Lock();
 
-    if(this->Settings.IsFrozen)
-    {
+	if (this->Settings.IsFrozen)
+	{
 		this->UnLock();
 		return false;
-    }
+	}
 
 	this->Series[iSeries].LastValue = dValue;
 
@@ -460,39 +460,39 @@ bool CGraph::Update(short iSeries, double dValue)
 	this->Stats.HighestValue = dValue;
 	this->Series[iSeries].TopValue = dValue;
 
-	if(dValue > this->Stats.TopValue)
+	if (dValue > this->Stats.TopValue)
 	{
 		this->Stats.TopValue = dValue;
 	}
 
-	for(short iS = 0; iS < this->Config.SeriesCount; iS++)
+	for (short iS = 0; iS < this->Config.SeriesCount; iS++)
 	{
 		this->Series[iS].TopValue = this->Stats.TopValue;
 		this->Series[iS].HighestValue = dValue;
 
-		if(iS == iSeries && dValue > this->Series[iS].TopValue)
+		if (iS == iSeries && dValue > this->Series[iS].TopValue)
 		{
 			this->Series[iS].TopValue = dValue;
 			this->Series[iS].HighestValue = dValue;
 		}
 
-		for(int i = 0; i < this->Config.Width; i++)
+		for (int i = 0; i < this->Config.Width; i++)
 		{
-			if(this->Series[iS].Values[i] > this->Stats.TopValue)
+			if (this->Series[iS].Values[i] > this->Stats.TopValue)
 			{
 				this->Series[iS].TopValue = this->Series[iS].Values[i];
 				this->Stats.TopValue = this->Series[iS].Values[i];
 			}
-			if(this->Series[iS].Values[i] > this->Stats.HighestValue)
+			if (this->Series[iS].Values[i] > this->Stats.HighestValue)
 			{
 				this->Series[iS].HighestValue = this->Series[iS].Values[i];
 				this->Stats.HighestValue = this->Series[iS].Values[i];
 			}
-			if(this->Series[iS].Values[i] > this->Series[iS].TopValue)
+			if (this->Series[iS].Values[i] > this->Series[iS].TopValue)
 			{
 				this->Series[iS].TopValue = this->Series[iS].Values[i];
 			}
-			if(this->Series[iS].Values[i] > this->Series[iS].HighestValue)
+			if (this->Series[iS].Values[i] > this->Series[iS].HighestValue)
 			{
 				this->Series[iS].HighestValue = this->Series[iS].Values[i];
 			}
@@ -501,7 +501,7 @@ bool CGraph::Update(short iSeries, double dValue)
 
 	double dHeight = (this->Config.Height - this->Settings.SpacingTop) - this->Settings.SpacingBottom;
 
-	if(this->Settings.UniformScaling)
+	if (this->Settings.UniformScaling)
 	{
 		this->Series[iSeries].CurrentScale = (this->Stats.MinimumRange) / ((double)this->Stats.TopValue);
 	}
@@ -510,79 +510,79 @@ bool CGraph::Update(short iSeries, double dValue)
 	}
 
 	//Save values.
-	for(int i = this->Config.Width; i > 0; i--)
+	for (int i = this->Config.Width; i > 0; i--)
 	{
-		this->Series[iSeries].Values[i] = this->Series[iSeries].Values[i-1];
+		this->Series[iSeries].Values[i] = this->Series[iSeries].Values[i - 1];
 	}
 	this->Series[iSeries].Values[0] = dValue;
-	
-	if(this->Settings.Direction == GRAPH_LEFT)
-    {
-		if(this->Settings.UniformScaling)
+
+	if (this->Settings.Direction == GRAPH_LEFT)
+	{
+		if (this->Settings.UniformScaling)
 		{
-			Points[0].y = (int) ((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
+			Points[0].y = (int)((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
 
 			//Perform scaling.
-			for(int i = 0; i <= this->Config.Width; i++)
+			for (int i = 0; i <= this->Config.Width; i++)
 			{
-	            this->Series[iSeries].pPoints[i].y = (int)
+				this->Series[iSeries].pPoints[i].y = (int)
 					((dHeight - ((dHeight * (this->Series[iSeries].Values[i] * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
 			}
 		}
 		else {
-			Points[0].y = (int) ((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
+			Points[0].y = (int)((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
 
 			//Perform scaling.
-			for(int i = 0; i <= this->Config.Width; i++)
+			for (int i = 0; i <= this->Config.Width; i++)
 			{
-	            this->Series[iSeries].pPoints[i].y = (int)
+				this->Series[iSeries].pPoints[i].y = (int)
 					((dHeight - ((dHeight * (this->Series[iSeries].Values[i] * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
 			}
 		}
 
-		for(int i = 1; i <= this->Config.Width; i++)
+		for (int i = 1; i <= this->Config.Width; i++)
 		{
-			Points[i].y = this->Series[iSeries].pPoints[i-1].y;
+			Points[i].y = this->Series[iSeries].pPoints[i - 1].y;
 		}
 
-		for(int i = 0; i <= this->Config.Width; i++)
+		for (int i = 0; i <= this->Config.Width; i++)
 		{
 			this->Series[iSeries].pPoints[i].y = Points[i].y;
 		}
-    }
-    else {
-		if(this->Settings.UniformScaling)
+	}
+	else {
+		if (this->Settings.UniformScaling)
 		{
-			Points[this->Config.Width].y = (int) ((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
+			Points[this->Config.Width].y = (int)((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
 
 			//Perform scaling.
-			for(int i = 1; i <= this->Config.Width; i++)
+			for (int i = 1; i <= this->Config.Width; i++)
 			{
-	            this->Series[iSeries].pPoints[this->Config.Width - i].y = (int)
+				this->Series[iSeries].pPoints[this->Config.Width - i].y = (int)
 					((dHeight - ((dHeight * (this->Series[iSeries].Values[i] * this->Series[iSeries].CurrentScale)) / this->Stats.MinimumRange)) + this->Settings.SpacingTop);
 			}
 		}
 		else {
-			Points[this->Config.Width].y = (int) ((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
+			Points[this->Config.Width].y = (int)((dHeight - ((dHeight * (dValue * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
 
 			//Perform scaling.
-			for(int i = 1; i <= this->Config.Width; i++)
+			for (int i = 1; i <= this->Config.Width; i++)
 			{
-	            this->Series[iSeries].pPoints[this->Config.Width - i].y = (int)
+				this->Series[iSeries].pPoints[this->Config.Width - i].y = (int)
 					((dHeight - ((dHeight * (this->Series[iSeries].Values[i] * this->Series[iSeries].CurrentScale)) / this->Series[iSeries].MinimumRange)) + this->Settings.SpacingTop);
 			}
 		}
 
-		for(int i = this->Config.Width - 1; i >= 0; i--)
-        {
-            Points[i].y = this->Series[iSeries].pPoints[i+1].y;
-        }
+		for (int i = this->Config.Width - 1; i >= 0; i--)
+		{
+			Points[i].y = this->Series[iSeries].pPoints[i + 1].y;
+		}
 
-        for(int i = this->Config.Width + 1; i >= 0; i--)
-        {
-            this->Series[iSeries].pPoints[i].y = Points[i].y;
-        }
-    }
+		for (int i = this->Config.Width + 1; i >= 0; i--)
+		{
+			this->Series[iSeries].pPoints[i].y = Points[i].y;
+		}
+	}
 
 	this->UnLock();
 
@@ -600,7 +600,7 @@ void CGraph::Destroy(void)
 
 void CGraph::Destroy(bool bDeleteCS)
 {
-	if(this->Settings.IsInitialized)
+	if (this->Settings.IsInitialized)
 	{
 		this->Lock();
 
@@ -609,7 +609,7 @@ void CGraph::Destroy(bool bDeleteCS)
 		SetWindowLongPtr(this->Config.hWnd, GWLP_WNDPROC, (INT_PTR)this->_OldGraphProc);
 		SendMessage(this->Config.hWnd, WM_PAINT, 0, 0);
 
-		for(short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
+		for (short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
 		{
 			free(this->Series[iSeries].pPoints);
 			free(this->Series[iSeries].Values);
@@ -626,7 +626,7 @@ void CGraph::Destroy(bool bDeleteCS)
 
 		this->UnLock();
 
-		if(bDeleteCS)
+		if (bDeleteCS)
 		{
 			RemoveProp(this->Config.hWnd, "Class");
 			DeleteCriticalSection(&this->csLock);
@@ -646,7 +646,7 @@ void CGraph::Freeze(bool bFreeze)
 
 bool CGraph::IsFrozen()
 {
-    return this->Settings.IsFrozen;
+	return this->Settings.IsFrozen;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -681,14 +681,14 @@ void CGraph::UnLock(void)
 
 void CGraph::Reset(void)
 {
-	if(this->Config.hWnd)
+	if (this->Config.hWnd)
 	{
 		this->Lock();
 
 		int ilSeries = this->Config.SeriesCount;
 
-		GRAPHSERIES *lpSeries = (GRAPHSERIES *) calloc(ilSeries, sizeof(GRAPHSERIES));
-		if(lpSeries)
+		GRAPHSERIES* lpSeries = (GRAPHSERIES*)calloc(ilSeries, sizeof(GRAPHSERIES));
+		if (lpSeries)
 		{
 			//Make a temp copy of the series collection.
 			memcpy_s(lpSeries, sizeof(GRAPHSERIES) * ilSeries, this->Series, sizeof(GRAPHSERIES) * ilSeries);
@@ -704,7 +704,7 @@ void CGraph::Reset(void)
 			this->Initialize(lConfig.hWnd, lSettings.BGColor,
 				lSettings.GridColor, lSettings.SpacingX, lSettings.Direction, this->Settings.UniformScaling, false);
 
-			for(short iSeries = 0; iSeries < ilSeries; iSeries++)
+			for (short iSeries = 0; iSeries < ilSeries; iSeries++)
 			{
 				this->AddSeries(lpSeries[iSeries].LineColor, lpSeries[iSeries].MinimumRange,
 					(GraphTextFormatCallback)lpSeries[iSeries].pTextFormatCallback);
@@ -735,7 +735,7 @@ void CGraph::Resize(int iX, int iY, int iInWidth, int iInHeight)
 	this->Config.Width = iInWidth;
 
 	int iMemory = (this->Config.Width + 1) * sizeof(POINT);
-    this->Points = (POINT *) realloc(this->Points, iMemory);
+	this->Points = (POINT *) realloc(this->Points, iMemory);
 
 	for(short iSeries = 0; iSeries < this->Config.SeriesCount; iSeries++)
 	{

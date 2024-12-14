@@ -29,45 +29,45 @@ using namespace NSWFL::Memory;
 
 bool InitializeApp(void)
 {
-	if(!gMem.Initialize())
+	if (!gMem.Initialize())
 	{
 		return false;
 	}
-	
+
 	LoadString(ghAppInstance, IDS_APPCOPYRIGHT, gsAppCopyRight, sizeof(gsAppCopyRight));
-    LoadString(ghAppInstance, IDS_FILEVERSION, gsFileVersion, sizeof(gsFileVersion));
-    LoadString(ghAppInstance, IDS_TITLECAPTION, gsTitleCaption, sizeof(gsTitleCaption));
-    LoadString(ghAppInstance, IDS_REGISTRYKEY, gsRegistryKey, sizeof(gsRegistryKey));
+	LoadString(ghAppInstance, IDS_FILEVERSION, gsFileVersion, sizeof(gsFileVersion));
+	LoadString(ghAppInstance, IDS_TITLECAPTION, gsTitleCaption, sizeof(gsTitleCaption));
+	LoadString(ghAppInstance, IDS_REGISTRYKEY, gsRegistryKey, sizeof(gsRegistryKey));
 
 	DWORD dwsRegValueSz = 0;
 
 	dwsRegValueSz = sizeof(gsDrive);
-	if(!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "LastDrive", gsDrive, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "LastDrive", gsDrive, dwsRegValueSz))
 	{
 		strcpy_s(gsDrive, sizeof(gsDrive), "");
 	}
 
 	dwsRegValueSz = sizeof(gsLastChunkSize);
-	if(!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "ChunkSize", gsLastChunkSize, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "ChunkSize", gsLastChunkSize, dwsRegValueSz))
 	{
 		strcpy_s(gsLastChunkSize, sizeof(gsLastChunkSize), "1024 * 64");
 	}
 
 	dwsRegValueSz = sizeof(gsLastIOS);
-	if(!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "IOS", gsLastIOS, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "IOS", gsLastIOS, dwsRegValueSz))
 	{
 		strcpy_s(gsLastIOS, sizeof(gsLastIOS), "128");
 	}
 
 	dwsRegValueSz = sizeof(gsLastIterations);
-	if(!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "Iterations", gsLastIterations, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "Iterations", gsLastIterations, dwsRegValueSz))
 	{
 		strcpy_s(gsLastIterations, sizeof(gsLastIterations), "320");
 	}
 
 	gbUseWriteCache = Get_BOOLRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "AllowCache");
 
-    return true;
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
