@@ -1,6 +1,0 @@
-[submodule "CGraph"]
-	path = CGraph
-	url = https://github.com/NTDLS/CGraph
-[submodule "CMathParser"]
-	path = CMathParser
-	url = https://github.com/NTDLS/CMathParser
