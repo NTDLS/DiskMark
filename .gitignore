@@ -11,3 +11,7 @@
 *.user
 *.ipch
 *.res
+
+.vs/
+
+x64/

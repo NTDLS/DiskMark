@@ -290,16 +290,7 @@
     <None Include="Resources\MainIcon.ico">
       <Filter>Resources</Filter>
     </None>
-    <None Include="NSWFL\.gitignore">
-      <Filter>Classes &amp; Libraries\NSWFL</Filter>
-    </None>
-    <None Include="NSWFL\LICENSE">
-      <Filter>Classes &amp; Libraries\NSWFL</Filter>
-    </None>
     <None Include="NSWFL\README.md">
-      <Filter>Classes &amp; Libraries\NSWFL</Filter>
-    </None>
-    <None Include="NSWFL\.git">
       <Filter>Classes &amp; Libraries\NSWFL</Filter>
     </None>
   </ItemGroup>
