@@ -1,0 +1,34 @@
+<HTML>
+<HEAD>
+   <TITLE>Exporting Results</TITLE>
+</HEAD>
+<BODY LINK="#0000FF" VLINK="#800080">
+
+<CENTER><P><IMG SRC="AppLogo.gif"></P></CENTER>
+
+<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Exporting Results</FONT></H2>
+<P><HR WIDTH="100%"></P>
+
+<P>
+Once a test has produced results you can keep them with <B>Export...</B> or <B>Copy Results</B> on the main window.
+Cancelled or failed tests can be exported too; the report notes that the results are partial.
+</P>
+
+<B>What is included:</B><BR>
+<UL>
+<LI><B>Drive</B> - drive letter and type, volume label, file system, device vendor and model, bus (NVMe, SATA, USB, ...), SSD or HDD, capacity and free space at the start of the test. Details the drive does not report are shown as Unknown.</LI>
+<LI><B>Configuration</B> - block size, test file size, duration per phase and the write cache setting.</LI>
+<LI><B>Results</B> - for writes and reads: average, minimum, maximum and last throughput (MB/s), IOPS, average latency, number of samples and disk time.</LI>
+<LI>The date and time the test started and its outcome.</LI>
+</UL>
+
+<B>Export...</B><BR>
+Opens a Save dialog. Choose <B>Text report</B> (.txt) for a readable summary, or <B>CSV spreadsheet</B> (.csv) for use in Excel or other tools.
+The CSV has a header row and one row per phase (Write, Read) with the drive and configuration repeated on each row, so exports from several tests or machines can be combined into one sheet.
+The suggested file name contains the drive letter and the date and time.<BR><BR>
+
+<B>Copy Results</B><BR>
+Places the same text report on the clipboard.<BR><BR>
+
+</BODY>
+</HTML>

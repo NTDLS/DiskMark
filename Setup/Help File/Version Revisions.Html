@@ -6,10 +6,21 @@
 
 <CENTER><P><IMG SRC="AppLogo.gif"></P></CENTER>
 
-<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Version Revisions</FONT></H1>
+<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Version Revisions</FONT></H2>
 <P><HR WIDTH="100%"></P>
 
 <UL>
+<LI><B>DiskMark (2.0.0.0)</B></LI>
+<UL>
+<LI>(1) Tests are now time-based: set a duration (default 30 seconds) for the write test and the read test, sampled once per second. Replaces &quot;IOs&quot; and &quot;Iterations&quot;.</LI>
+<LI>(2) New &quot;Test file size&quot; setting. The old &quot;Chunk Size&quot; is now &quot;Block size&quot;.</LI>
+<LI>(3) More accurate and meaningful results: reads always bypass the file cache, cached writes are flushed inside the timed region, I/O buffers are sector aligned and filled with incompressible data, and the average is total bytes over total time.</LI>
+<LI>(4) Added IOPS, latency and per-second minimum, maximum and last throughput.</LI>
+<LI>(5) Added Export (text or CSV) with drive details, configuration and results, and a Copy Results button.</LI>
+<LI>(6) Redesigned user interface with large headline figures, improved graphs, status line, DPI awareness and About buttons.</LI>
+<LI>(7) Works without administrator rights, and settings are now saved per user.</LI>
+<LI>(8) Fixed several bugs including settings that were never saved, input errors that went unreported, and a free-space check that could overflow.</LI>
+</UL>
 <LI><B>DiskMark (1.0.0.0)</B></LI>
 <UL>
 <LI>(1) Initial Beta Release.</LI>

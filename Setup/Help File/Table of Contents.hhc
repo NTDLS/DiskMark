@@ -57,12 +57,20 @@
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Configuration Dialog">
+			<param name="Name" value="Settings Dialog">
 			<param name="Local" value="Config.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
-			<param name="Name" value="Progress Dialog">
+			<param name="Name" value="Main Window">
 			<param name="Local" value="Progress.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="How Results Are Measured">
+			<param name="Local" value="Measuring.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Exporting Results">
+			<param name="Local" value="Export.html">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">

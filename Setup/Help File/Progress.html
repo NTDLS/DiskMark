@@ -1,31 +1,49 @@
 <HTML>
 <HEAD>
-   <TITLE>Progress Dialog</TITLE>
+   <TITLE>Main Window</TITLE>
 </HEAD>
 <BODY LINK="#0000FF" VLINK="#800080">
 
 <CENTER><P><IMG SRC="AppLogo.gif"></P></CENTER>
 
-<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Progress Dialog</FONT></H2>
+<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Main Window</FONT></H2>
 <P><HR WIDTH="100%"></P>
 
 <P>
-The progress dialog summarizes the configuration you have selected and displays the progress and resulting disk performance information.<BR><BR>
-<Img Src="Progress.png">
+The main window summarizes the test you selected and shows the results as they arrive. The write test runs first, followed by the read test.
 </P>
-<BR>
 
-<B>Disk Time (seconds):</B><BR>
-The total time DiskMark as spent performing disk actions over the entire duration of the test.<BR><BR>
+<B>Test Configuration:</B><BR>
+The drive, write cache setting, block size, test file size and the duration of each phase.<BR><BR>
 
-<B>Last:</B><BR>
-The megabytes per second rating of the last benchmark iteration.<BR><BR>
+<B>Write Performance / Read Performance:</B><BR>
+Each phase has its own panel. The large figure is the <B>average throughput</B> in MB/s (1 MB = 1,048,576 bytes), calculated as total bytes moved divided by total time.
+Below it are:<BR>
+<UL>
+<LI><B>Last</B> - throughput of the most recent one-second sample.</LI>
+<LI><B>Min / Max</B> - the slowest and fastest one-second samples seen so far.</LI>
+<LI><B>IOPS</B> - I/O operations per second (one operation is one block).</LI>
+<LI><B>Latency</B> - the average time to complete one block.</LI>
+<LI><B>Disk time</B> - the time actually spent performing timed I/O.</LI>
+</UL>
 
-<B>Average:</B><BR>
-The average megabytes per seconds over the entire duration of the test.<BR><BR>
+<B>Graphs:</B><BR>
+Each graph plots one-second samples over the length of the test and labels its vertical scale in MB/s.
+The lines are <FONT COLOR="#FFB300">Last</FONT> (amber), <FONT COLOR="#78909C">Avg</FONT> (gray),
+<FONT COLOR="#2E7D32">Max</FONT> (green) and <FONT COLOR="#C62828">Min</FONT> (red); the current value of each is printed above the plot.<BR><BR>
 
-<B>Min/Max (MB/s):</B><BR>
-The "min" and "max" are the two extremes which have been encountered over the entire duration of the test.<BR><BR>
+<B>Progress bar and status:</B><BR>
+Shows how much of the whole test (write and read) has completed and what the test is currently doing.<BR><BR>
+
+<B>Buttons:</B><BR>
+<UL>
+<LI><B>Run / Cancel</B> - opens the <A Href="Config.html">settings dialog</A> and starts a test; while a test is running the button cancels it.</LI>
+<LI><B>Copy Results</B> - copies a text report to the clipboard.</LI>
+<LI><B>Export...</B> - saves the results to a file. See <A Href="Export.html">Exporting Results</A>.</LI>
+<LI><B>Help</B> and <B>About</B> - open this help file and version information.</LI>
+<LI><B>Always on top</B> - keeps the window above other windows.</LI>
+</UL>
+Copy Results and Export are available once a test has produced results, including a cancelled one.<BR><BR>
 
 </BODY>
 </HTML>

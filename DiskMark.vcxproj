@@ -297,6 +297,7 @@
     <ClInclude Include="NSWFL\NSWFL_String.H" />
     <ClInclude Include="NSWFL\NSWFL_StringBuilder.H" />
     <ClInclude Include="NSWFL\NSWFL_Windows.H" />
+    <ClInclude Include="Source\DiskBench.H" />
     <ClInclude Include="Source\Entry.H" />
     <ClInclude Include="Source\Init.H" />
     <ClInclude Include="Source\Routines.H" />
@@ -344,6 +345,7 @@
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="Source\DiskBench.Cpp" />
     <ClCompile Include="Source\Routines.Cpp" />
     <ClCompile Include="Dialogs\ConfigDlg.Cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>

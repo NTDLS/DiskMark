@@ -16,6 +16,8 @@
 #include "Init.H"
 #include "Entry.H"
 #include "Routines.H"
+#include "DiskBench.H"
+#include "../Dialogs/NetLogoDlg.H"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,61 +47,31 @@ void OpenHelp(HWND hWnd)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void ShowAbout(HWND hWnd)
+{
+	_AboutDialogInfo ADI;
+
+	ADI.DisplayIcon = LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN));
+	ADI.TitleCaption = gsTitleCaption;
+	ADI.FileVersion = gsFileVersion;
+	ADI.BuildDate = __DATE__;
+	ADI.BuildTime = __TIME__;
+	ADI.CopyRight = gsAppCopyRight;
+	ADI.OwnerHandle = hWnd;
+
+	NetLogo(&ADI);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int SectorAlign(const char* sDrive, int iBufferSize)
 {
-	char sFileName[MAX_PATH];
-
-	sprintf_s(sFileName, sizeof(sFileName),
-		"%s\\%d-%d.txt",
-		sDrive, iBufferSize, GetTickCount());
-	CorrectReversePath(sFileName, sizeof(sFileName));
-
-	HANDLE hFile = CreateFile(
-		sFileName,
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CREATE_ALWAYS,
-		FILE_FLAG_WRITE_THROUGH | FILE_FLAG_NO_BUFFERING,
-		NULL
-	);
-
-	if ((iBufferSize % 512) != 1)
+	if (iBufferSize < 1)
 	{
-		if (iBufferSize > 512)
-		{
-			iBufferSize -= iBufferSize % 512;
-		}
-		else {
-			iBufferSize = 512;
-		}
+		return -1;
 	}
 
-	DWORD dwBytesWritten = 0;
-	DWORD dwBytesToWrite = iBufferSize;
-
-	char* sBuffer = (char*)calloc(iBufferSize + 1025, 1);
-
-	for (DWORD iTries = 0; iTries < 1024; iTries++)
-	{
-		if (WriteFile(hFile, sBuffer, dwBytesToWrite, &dwBytesWritten, NULL))
-		{
-			if (dwBytesWritten == dwBytesToWrite)
-			{
-				CloseHandle(hFile);
-				DeleteFile(sFileName);
-				free(sBuffer);
-				return (int)dwBytesToWrite;
-			}
-		}
-
-		dwBytesToWrite++;
-	}
-
-	CloseHandle(hFile);
-	DeleteFile(sFileName);
-	free(sBuffer);
-	return -1;
+	return (int)BenchAlignBlockSize(sDrive, (DWORD)iBufferSize);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+   <TITLE>How Results Are Measured</TITLE>
+</HEAD>
+<BODY LINK="#0000FF" VLINK="#800080">
+
+<CENTER><P><IMG SRC="AppLogo.gif"></P></CENTER>
+
+<H2 ALIGN=CENTER><FONT COLOR="#0000FF">How Results Are Measured</FONT></H2>
+<P><HR WIDTH="100%"></P>
+
+<P>
+DiskMark is designed so that the figures reflect the drive rather than the operating system's memory cache.
+</P>
+
+<UL>
+<LI>The test writes sequential blocks to a temporary file, wrapping around at the end of the file, for the configured duration; it then reads the file back for the same duration.</LI>
+<LI>Throughput is sampled once per second. <B>Average</B> is total bytes divided by total time, not an average of the per-second rates, so a slow stretch is weighted correctly. <B>Min</B>, <B>Max</B> and <B>Last</B> are per-sample rates.</LI>
+<LI><B>IOPS</B> and <B>Latency</B> are averages per block over the whole phase.</LI>
+<LI>Writes use unbuffered, write-through I/O unless write caching is allowed, in which case the flush is part of the timed region.</LI>
+<LI>Reads are always unbuffered, so they come from the device, not from RAM.</LI>
+<LI>The I/O buffer is memory-aligned and filled with incompressible pseudo-random data, so drives that compress or de-duplicate data cannot inflate the results.</LI>
+<LI>The space for the test file is reserved before timing starts, so file-system growth is not measured.</LI>
+<LI>If the write phase did not fill the whole test file, only the part that was written is read back.</LI>
+<LI>Timing uses the high-resolution performance counter.</LI>
+</UL>
+
+<B>Tips for meaningful comparisons:</B><BR>
+<UL>
+<LI>Use the same block size, test file size and duration when comparing drives.</LI>
+<LI>Close other programs; background disk activity lowers and varies the results.</LI>
+<LI>Many SSDs are fast until their internal cache fills. A longer duration and larger test file reveal sustained performance.</LI>
+<LI>Results on network drives include the speed of the network connection.</LI>
+<LI>Results vary slightly from run to run; repeat the test and compare the averages.</LI>
+</UL>
+
+</BODY>
+</HTML>

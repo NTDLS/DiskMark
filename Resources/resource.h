@@ -27,14 +27,13 @@
 #define IDC_APPNAME                 1022
 #define IDC_ALLOWCACHE              1023
 #define IDC_APPVERSION              1024
-#define IDC_IOS                     1025
+#define IDC_FILESIZE                     1025
 #define IDC_APPCOPYRIGHT            1026
-#define IDC_ITERATIONS              1027
+#define IDC_DURATION              1027
 #define IDC_OKBUTTON                1028
-#define IDC_CHUNKSIZE               1029
+#define IDC_BLOCKSIZE               1029
 #define IDC_BUILDTIMEDATE           1030
 #define IDC_TOTALWORKINGSET         1031
-#define IDC_BYTESPERITERATION       1032
 #define IDC_TOTALDISKTIME           1033
 #define IDC_DISKTIME                1034
 #define IDC_DISKTIMEWRITE           1035
@@ -68,7 +67,16 @@
 #define IDC_GRAPH2                  1063
 #define IDC_READGRAPH               1064
 #define IDC_GRAPHREAD               1065
-#define IDC_TOTALDATASETSIZE        1066
+#define IDC_DRIVEINFO               1067
+#define IDC_IOPSWRITE               1068
+#define IDC_IOPSREAD                1069
+#define IDC_LATWRITE                1070
+#define IDC_LATREAD                 1071
+#define IDC_STATUS                  1072
+#define IDC_CMDCOPY                 1073
+#define IDC_CFGHINT                 1074
+#define IDC_CMDEXPORT               1075
+#define IDC_CMDABOUT                1076
 
 // Next default values for new objects
 // 
@@ -76,7 +84,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
