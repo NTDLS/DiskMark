@@ -34,6 +34,20 @@ typedef struct _tag_BenchStats {
 // Called from the benchmark thread. iElapsedMs/iTotalMs describe progress across both phases.
 typedef void (*BenchProgressCallback)(void* pContext, BenchEvent eEvent, const BENCHSTATS* pStats, int iElapsedMs, int iTotalMs);
 
+typedef struct _tag_BenchDriveInfo {
+	char Root[MAX_PATH];
+	char VolumeLabel[MAX_PATH];
+	char FileSystem[64];
+	char DriveType[32];		// Fixed, Removable, Network, RAM disk...
+	char Device[256];		// Vendor and model reported by the storage driver, if available.
+	char Bus[32];			// NVMe, SATA, USB...
+	char Media[16];			// SSD, HDD or Unknown.
+	unsigned __int64 TotalBytes;
+	unsigned __int64 FreeBytes;
+} BENCHDRIVEINFO, * LPBENCHDRIVEINFO;
+
+void BenchGetDriveInfo(const char* sDrive, BENCHDRIVEINFO* pInfo);
+
 DWORD BenchGetSectorSize(const char* sDrive);
 DWORD BenchAlignBlockSize(const char* sDrive, DWORD dwBlockSize);
 

@@ -5,6 +5,7 @@
 #include <Windows.H>
 #include <Stdio.H>
 #include <Stdlib.H>
+#include <WinIoCtl.H>
 
 #include "DiskBench.H"
 
@@ -363,6 +364,137 @@ BenchResult RunDiskBench(const BENCHCONFIG* pConfig, volatile bool* pbCancel,
 	VirtualFree(pBuffer, 0, MEM_RELEASE);
 
 	return eResult;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void CopyTrimmed(char* sOut, size_t iOutSz, const char* sIn)
+{
+	while (*sIn == ' ')
+	{
+		sIn++;
+	}
+
+	strcpy_s(sOut, iOutSz, sIn);
+
+	size_t iLen = strlen(sOut);
+	while (iLen > 0 && sOut[iLen - 1] == ' ')
+	{
+		sOut[--iLen] = '\0';
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static const char* BusTypeName(STORAGE_BUS_TYPE eType)
+{
+	switch (eType)
+	{
+	case BusTypeScsi: return "SCSI";
+	case BusTypeAtapi: return "ATAPI";
+	case BusTypeAta: return "ATA";
+	case BusType1394: return "IEEE 1394";
+	case BusTypeSsa: return "SSA";
+	case BusTypeFibre: return "Fibre Channel";
+	case BusTypeUsb: return "USB";
+	case BusTypeRAID: return "RAID";
+	case BusTypeiScsi: return "iSCSI";
+	case BusTypeSas: return "SAS";
+	case BusTypeSata: return "SATA";
+	case BusTypeSd: return "SD";
+	case BusTypeMmc: return "MMC";
+	case BusTypeVirtual: return "Virtual";
+	case BusTypeFileBackedVirtual: return "File-backed virtual";
+	case BusTypeSpaces: return "Storage Spaces";
+	case BusTypeNvme: return "NVMe";
+	default: return "Unknown";
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Gathers what can be learned about the volume without elevation. Anything unavailable is left as "Unknown".
+void BenchGetDriveInfo(const char* sDrive, BENCHDRIVEINFO* pInfo)
+{
+	memset(pInfo, 0, sizeof(BENCHDRIVEINFO));
+	strcpy_s(pInfo->Root, sizeof(pInfo->Root), sDrive);
+	strcpy_s(pInfo->VolumeLabel, sizeof(pInfo->VolumeLabel), "");
+	strcpy_s(pInfo->FileSystem, sizeof(pInfo->FileSystem), "Unknown");
+	strcpy_s(pInfo->DriveType, sizeof(pInfo->DriveType), "Unknown");
+	strcpy_s(pInfo->Device, sizeof(pInfo->Device), "Unknown");
+	strcpy_s(pInfo->Bus, sizeof(pInfo->Bus), "Unknown");
+	strcpy_s(pInfo->Media, sizeof(pInfo->Media), "Unknown");
+
+	GetVolumeInformation(sDrive, pInfo->VolumeLabel, sizeof(pInfo->VolumeLabel), NULL, NULL, NULL,
+		pInfo->FileSystem, sizeof(pInfo->FileSystem));
+
+	ULARGE_INTEGER uliAvailable, uliTotal, uliFree;
+	if (GetDiskFreeSpaceEx(sDrive, &uliAvailable, &uliTotal, &uliFree))
+	{
+		pInfo->TotalBytes = uliTotal.QuadPart;
+		pInfo->FreeBytes = uliFree.QuadPart;
+	}
+
+	switch (GetDriveType(sDrive))
+	{
+	case DRIVE_REMOVABLE: strcpy_s(pInfo->DriveType, sizeof(pInfo->DriveType), "Removable"); break;
+	case DRIVE_FIXED: strcpy_s(pInfo->DriveType, sizeof(pInfo->DriveType), "Fixed"); break;
+	case DRIVE_REMOTE: strcpy_s(pInfo->DriveType, sizeof(pInfo->DriveType), "Network"); break;
+	case DRIVE_RAMDISK: strcpy_s(pInfo->DriveType, sizeof(pInfo->DriveType), "RAM disk"); break;
+	}
+
+	// Query the physical device behind the volume. Zero access rights are enough for property queries.
+	char sDevice[8] = "\\\\.\\X:";
+	sDevice[4] = sDrive[0];
+
+	HANDLE hDevice = CreateFile(sDevice, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hDevice == INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+
+	STORAGE_PROPERTY_QUERY query;
+	memset(&query, 0, sizeof(query));
+	query.PropertyId = StorageDeviceProperty;
+	query.QueryType = PropertyStandardQuery;
+
+	BYTE bBuffer[1024];
+	DWORD dwReturned = 0;
+
+	if (DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), bBuffer, sizeof(bBuffer), &dwReturned, NULL))
+	{
+		STORAGE_DEVICE_DESCRIPTOR* pDescriptor = (STORAGE_DEVICE_DESCRIPTOR*)bBuffer;
+
+		char sVendor[128] = "";
+		char sProduct[128] = "";
+
+		if (pDescriptor->VendorIdOffset && pDescriptor->VendorIdOffset < sizeof(bBuffer))
+		{
+			CopyTrimmed(sVendor, sizeof(sVendor), (const char*)bBuffer + pDescriptor->VendorIdOffset);
+		}
+		if (pDescriptor->ProductIdOffset && pDescriptor->ProductIdOffset < sizeof(bBuffer))
+		{
+			CopyTrimmed(sProduct, sizeof(sProduct), (const char*)bBuffer + pDescriptor->ProductIdOffset);
+		}
+
+		if (sVendor[0] || sProduct[0])
+		{
+			sprintf_s(pInfo->Device, sizeof(pInfo->Device), "%s%s%s", sVendor, (sVendor[0] && sProduct[0]) ? " " : "", sProduct);
+		}
+
+		strcpy_s(pInfo->Bus, sizeof(pInfo->Bus), BusTypeName(pDescriptor->BusType));
+	}
+
+	query.PropertyId = StorageDeviceSeekPenaltyProperty;
+	DEVICE_SEEK_PENALTY_DESCRIPTOR penalty;
+	memset(&penalty, 0, sizeof(penalty));
+
+	if (DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), &penalty, sizeof(penalty), &dwReturned, NULL))
+	{
+		strcpy_s(pInfo->Media, sizeof(pInfo->Media), penalty.IncursSeekPenalty ? "HDD" : "SSD");
+	}
+
+	CloseHandle(hDevice);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

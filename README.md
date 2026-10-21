@@ -13,3 +13,4 @@ DiskMark is a small utility that allows you to benchmark your disks and hard dri
 - The I/O buffer is page aligned and filled with incompressible pseudo-random data.
 - If the drive root is not writable (non-admin), the test file is placed in a `DiskMark-Temp` folder on that drive.
 - Validated against the Windows `PhysicalDisk` performance counters: a 20 GB-per-phase run reported 2641 MB/s write / 2205 MB/s read versus roughly 2650 / 2240 MB/s from the counters.
+- **Export...** saves the drive details (volume, file system, device model, bus, SSD/HDD, capacity), the configuration, and the write/read average, min, max, last, IOPS, latency and sample count as a text report or a CSV (one row per phase, handy for appending into a spreadsheet). **Copy Results** puts the same text report on the clipboard.

@@ -6,6 +6,8 @@
 #include <Stdio.H>
 #include <Stdlib.H>
 #include <ShlObj.H>
+#include <CommDlg.H>
+#include <StdArg.H>
 
 #include "../Resources/Resource.H"
 
@@ -25,6 +27,8 @@
 using namespace NSWFL::Windows;
 using namespace NSWFL::Conversion;
 using namespace NSWFL::File;
+
+#pragma comment(lib, "comdlg32.lib")
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,10 +77,13 @@ HANDLE hThread = NULL;
 DWORD dwThreadID = 0;
 volatile bool gbCancel = false;
 
-//Results of the most recent test, for "Copy Results".
+//Results of the most recent test, for "Copy Results" and "Export".
 BENCHCONFIG gBenchConfig;
 BENCHSTATS gWriteStats;
 BENCHSTATS gReadStats;
+BENCHDRIVEINFO gDriveInfo;
+SYSTEMTIME gTestStart;
+char gsOutcome[32] = "";
 bool gbHaveWriteStats = false;
 bool gbHaveReadStats = false;
 
@@ -288,6 +295,7 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 
 	Set_Text(GetDlgItem(hMainDialog, ID_CMDMULTI), "Cancel");
 	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDCOPY), FALSE);
+	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDEXPORT), FALSE);
 
 	memset(&gBenchConfig, 0, sizeof(gBenchConfig));
 	strcpy_s(gBenchConfig.Drive, sizeof(gBenchConfig.Drive), gsDrive);
@@ -299,6 +307,10 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 	gbHaveWriteStats = false;
 	gbHaveReadStats = false;
 
+	BenchGetDriveInfo(gBenchConfig.Drive, &gDriveInfo);
+	GetLocalTime(&gTestStart);
+	strcpy_s(gsOutcome, sizeof(gsOutcome), "Incomplete");
+
 	ResetCounters();
 	ShowConfiguration(&gBenchConfig);
 
@@ -309,6 +321,7 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 
 	if (eResult == BenchOk)
 	{
+		strcpy_s(gsOutcome, sizeof(gsOutcome), "Complete");
 		char sTemp[256];
 		sprintf_s(sTemp, sizeof(sTemp), "Complete. Write %.1f MB/s, Read %.1f MB/s (averages).",
 			gWriteStats.AvgMBps, gReadStats.AvgMBps);
@@ -317,9 +330,11 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 	}
 	else if (eResult == BenchCancelled)
 	{
+		strcpy_s(gsOutcome, sizeof(gsOutcome), "Cancelled (partial results)");
 		Set_Text(hStatus, "Cancelled.");
 	}
 	else {
+		strcpy_s(gsOutcome, sizeof(gsOutcome), "Failed (partial results)");
 		Set_Text(hStatus, "Failed.");
 		MessageBox(hMainDialog, sError, gsTitleCaption, MB_ICONERROR);
 	}
@@ -330,6 +345,7 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 	Set_Text(GetDlgItem(hMainDialog, ID_CMDMULTI), "Run");
 	EnableWindow(GetDlgItem(hMainDialog, ID_CMDMULTI), TRUE);
 	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDCOPY), gbHaveWriteStats || gbHaveReadStats);
+	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDEXPORT), gbHaveWriteStats || gbHaveReadStats);
 
 	CloseHandle(hThread);
 	hThread = NULL;
@@ -339,27 +355,57 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CopyResultsToClipboard(HWND hWnd)
+// Appends formatted text to a growing report buffer.
+static void AppendReport(char* sReport, size_t iReportSz, const char* sFormat, ...)
 {
-	char sReport[4096];
-	char sBlock[64];
-	char sRate[64];
-	char sLatency[64];
+	size_t iLen = strlen(sReport);
+	va_list args;
+	va_start(args, sFormat);
+	vsprintf_s(sReport + iLen, iReportSz - iLen, sFormat, args);
+	va_end(args);
+}
 
+static void FormatCapacity(unsigned __int64 u64Bytes, char* sOut, size_t iOutSz)
+{
+	FileSizeFriendly((__int64)u64Bytes, sOut, (int)iOutSz);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BuildTextReport(char* sReport, size_t iReportSz)
+{
+	char sTotal[64], sFree[64], sBlock[64], sFile[64];
+	FormatCapacity(gDriveInfo.TotalBytes, sTotal, sizeof(sTotal));
+	FormatCapacity(gDriveInfo.FreeBytes, sFree, sizeof(sFree));
 	FileSizeFriendly((__int64)gBenchConfig.BlockSize, sBlock, sizeof(sBlock));
-
-	char sFile[64];
 	FileSizeFriendly(gBenchConfig.FileSize, sFile, sizeof(sFile));
 
-	int iLen = sprintf_s(sReport, sizeof(sReport),
-		"%s %s\r\n"
-		"Drive: %s   Block size: %s   Test file: %s   Duration: %d s per phase   Write cache: %s\r\n",
-		gsTitleCaption, gsFileVersion, gBenchConfig.Drive, sBlock, sFile, gBenchConfig.DurationSeconds,
-		gBenchConfig.AllowWriteCache ? "allowed" : "off");
+	sReport[0] = '\0';
+	AppendReport(sReport, iReportSz, "%s %s results\r\n", gsTitleCaption, gsFileVersion);
+	AppendReport(sReport, iReportSz, "Date:           %04d-%02d-%02d %02d:%02d:%02d\r\n", gTestStart.wYear, gTestStart.wMonth,
+		gTestStart.wDay, gTestStart.wHour, gTestStart.wMinute, gTestStart.wSecond);
+	AppendReport(sReport, iReportSz, "Outcome:        %s\r\n\r\n", gsOutcome);
+
+	AppendReport(sReport, iReportSz, "Drive\r\n");
+	AppendReport(sReport, iReportSz, "  Drive:        %s (%s)\r\n", gDriveInfo.Root, gDriveInfo.DriveType);
+	AppendReport(sReport, iReportSz, "  Volume:       %s\r\n", gDriveInfo.VolumeLabel[0] ? gDriveInfo.VolumeLabel : "(none)");
+	AppendReport(sReport, iReportSz, "  File system:  %s\r\n", gDriveInfo.FileSystem);
+	AppendReport(sReport, iReportSz, "  Device:       %s\r\n", gDriveInfo.Device);
+	AppendReport(sReport, iReportSz, "  Bus / media:  %s / %s\r\n", gDriveInfo.Bus, gDriveInfo.Media);
+	AppendReport(sReport, iReportSz, "  Capacity:     %s (%s free at start)\r\n\r\n", sTotal, sFree);
+
+	AppendReport(sReport, iReportSz, "Configuration\r\n");
+	AppendReport(sReport, iReportSz, "  Block size:      %s\r\n", sBlock);
+	AppendReport(sReport, iReportSz, "  Test file size:  %s\r\n", sFile);
+	AppendReport(sReport, iReportSz, "  Duration:        %d s per phase (sampled every second)\r\n", gBenchConfig.DurationSeconds);
+	AppendReport(sReport, iReportSz, "  Write cache:     %s\r\n\r\n", gBenchConfig.AllowWriteCache ? "allowed (flush timed)" : "off (write-through)");
+
+	AppendReport(sReport, iReportSz, "Results (MB/s, 1 MB = 1,048,576 bytes)\r\n");
+	AppendReport(sReport, iReportSz, "          Average       Min       Max      Last      IOPS   Latency  Samples  Disk time\r\n");
 
 	const BENCHSTATS* pStats[2] = { &gWriteStats, &gReadStats };
 	const bool bHave[2] = { gbHaveWriteStats, gbHaveReadStats };
-	const char* sPhase[2] = { "Write", "Read " };
+	const char* sPhase[2] = { "Write", "Read" };
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -368,14 +414,55 @@ void CopyResultsToClipboard(HWND hWnd)
 			continue;
 		}
 
+		char sLatency[64];
 		FormatLatency(pStats[i]->AvgLatencyMs, sLatency, sizeof(sLatency));
-		FormatRate(pStats[i]->AvgMBps, sRate, sizeof(sRate));
-
-		iLen += sprintf_s(sReport + iLen, sizeof(sReport) - iLen,
-			"%s: avg %s, last %.1f, min %.1f, max %.1f MB/s, %.0f IOPS, %s latency, %d samples\r\n",
-			sPhase[i], sRate, pStats[i]->LastMBps, pStats[i]->MinMBps, pStats[i]->MaxMBps,
-			pStats[i]->Iops, sLatency, pStats[i]->Samples);
+		AppendReport(sReport, iReportSz, "  %-6s %9.1f %9.1f %9.1f %9.1f %9.0f %9s %8d %9.2f s\r\n", sPhase[i],
+			pStats[i]->AvgMBps, pStats[i]->MinMBps, pStats[i]->MaxMBps, pStats[i]->LastMBps,
+			pStats[i]->Iops, sLatency, pStats[i]->Samples, pStats[i]->TotalSeconds);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// One row per phase so several exports can be appended into one spreadsheet.
+void BuildCsvReport(char* sReport, size_t iReportSz)
+{
+	sReport[0] = '\0';
+	AppendReport(sReport, iReportSz,
+		"Date,Outcome,Drive,DriveType,Volume,FileSystem,Device,Bus,Media,CapacityBytes,FreeBytes,"
+		"BlockSizeBytes,TestFileBytes,DurationSeconds,WriteCache,Phase,AvgMBps,MinMBps,MaxMBps,LastMBps,"
+		"IOPS,AvgLatencyMs,Samples,TotalSeconds,TotalBytes\r\n");
+
+	const BENCHSTATS* pStats[2] = { &gWriteStats, &gReadStats };
+	const bool bHave[2] = { gbHaveWriteStats, gbHaveReadStats };
+	const char* sPhase[2] = { "Write", "Read" };
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (!bHave[i])
+		{
+			continue;
+		}
+
+		AppendReport(sReport, iReportSz,
+			"%04d-%02d-%02d %02d:%02d:%02d,%s,\"%s\",%s,\"%s\",%s,\"%s\",%s,%s,%I64u,%I64u,%lu,%I64d,%d,%s,%s,"
+			"%.2f,%.2f,%.2f,%.2f,%.0f,%.4f,%d,%.3f,%I64u\r\n",
+			gTestStart.wYear, gTestStart.wMonth, gTestStart.wDay, gTestStart.wHour, gTestStart.wMinute, gTestStart.wSecond,
+			gsOutcome, gDriveInfo.Root, gDriveInfo.DriveType, gDriveInfo.VolumeLabel, gDriveInfo.FileSystem,
+			gDriveInfo.Device, gDriveInfo.Bus, gDriveInfo.Media, gDriveInfo.TotalBytes, gDriveInfo.FreeBytes,
+			gBenchConfig.BlockSize, gBenchConfig.FileSize, gBenchConfig.DurationSeconds,
+			gBenchConfig.AllowWriteCache ? "On" : "Off", sPhase[i],
+			pStats[i]->AvgMBps, pStats[i]->MinMBps, pStats[i]->MaxMBps, pStats[i]->LastMBps,
+			pStats[i]->Iops, pStats[i]->AvgLatencyMs, pStats[i]->Samples, pStats[i]->TotalSeconds, pStats[i]->TotalBytes);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CopyResultsToClipboard(HWND hWnd)
+{
+	char sReport[8192];
+	BuildTextReport(sReport, sizeof(sReport));
 
 	if (OpenClipboard(hWnd))
 	{
@@ -395,6 +482,62 @@ void CopyResultsToClipboard(HWND hWnd)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ExportResults(HWND hWnd)
+{
+	char sFileName[MAX_PATH];
+	sprintf_s(sFileName, sizeof(sFileName), "DiskMark-%c-%04d%02d%02d-%02d%02d%02d", gDriveInfo.Root[0],
+		gTestStart.wYear, gTestStart.wMonth, gTestStart.wDay, gTestStart.wHour, gTestStart.wMinute, gTestStart.wSecond);
+
+	OPENFILENAME ofn;
+	memset(&ofn, 0, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hWnd;
+	ofn.lpstrFilter = "Text report (*.txt)\0*.txt\0CSV spreadsheet (*.csv)\0*.csv\0\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFile = sFileName;
+	ofn.nMaxFile = sizeof(sFileName);
+	ofn.lpstrDefExt = "txt";
+	ofn.lpstrTitle = "Export Results";
+	ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+	if (!GetSaveFileName(&ofn))
+	{
+		return;
+	}
+
+	// Honor an explicit .csv extension even if the filter says text, and vice versa.
+	const char* sExt = strrchr(sFileName, '.');
+	bool bCsv = sExt ? (_stricmp(sExt, ".csv") == 0) : (ofn.nFilterIndex == 2);
+
+	char sReport[8192];
+	if (bCsv)
+	{
+		BuildCsvReport(sReport, sizeof(sReport));
+	}
+	else {
+		BuildTextReport(sReport, sizeof(sReport));
+	}
+
+	HANDLE hFile = CreateFile(sFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	DWORD dwWritten = 0;
+	if (hFile == INVALID_HANDLE_VALUE || !WriteFile(hFile, sReport, (DWORD)strlen(sReport), &dwWritten, NULL))
+	{
+		MessageBox(hWnd, "Failed to write the export file.", gsTitleCaption, MB_ICONERROR);
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(hFile);
+		}
+		return;
+	}
+	CloseHandle(hFile);
+
+	char sStatus[MAX_PATH + 32];
+	sprintf_s(sStatus, sizeof(sStatus), "Exported to %s", sFileName);
+	Set_Text(hStatus, sStatus);
+}
+
+////////
 
 static void PromptAndStart(HWND hWnd)
 {
@@ -481,6 +624,7 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Set_Text(hBlockSize, "n/a");
 		Set_Text(hStatus, "Ready.");
 		EnableWindow(GetDlgItem(hWnd, IDC_CMDCOPY), FALSE);
+		EnableWindow(GetDlgItem(hWnd, IDC_CMDEXPORT), FALSE);
 
 		CenterWindow(hWnd);
 
@@ -523,6 +667,11 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (LOWORD(wParam) == IDC_CMDHELP)
 		{
 			OpenHelp(hWnd);
+			return TRUE;
+		}
+		else if (LOWORD(wParam) == IDC_CMDEXPORT)
+		{
+			ExportResults(hWnd);
 			return TRUE;
 		}
 		else if (LOWORD(wParam) == IDC_CMDCOPY)
