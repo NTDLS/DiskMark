@@ -131,7 +131,7 @@
     <Link>
       <OutputFile>$(Platform)\$(Configuration)\DiskMark.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\DiskMark.pdb</ProgramDatabaseFile>
@@ -174,7 +174,7 @@
     <Link>
       <OutputFile>$(Platform)\$(Configuration)\DiskMark.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\DiskMark.pdb</ProgramDatabaseFile>
@@ -219,7 +219,7 @@
     <Link>
       <OutputFile>$(Platform)\$(Configuration)\DiskMark.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libc.lib;msvcrt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\DiskMark.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -266,7 +266,7 @@
     <Link>
       <OutputFile>$(Platform)\$(Configuration)\DiskMark.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libc.lib;msvcrt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\DiskMark.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
