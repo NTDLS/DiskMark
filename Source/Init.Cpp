@@ -47,22 +47,22 @@ bool InitializeApp(void)
 		strcpy_s(gsDrive, sizeof(gsDrive), "");
 	}
 
-	dwsRegValueSz = sizeof(gsLastChunkSize);
-	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastChunkSize, dwsRegValueSz))
+	dwsRegValueSz = sizeof(gsLastBlockSize);
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastBlockSize, dwsRegValueSz))
 	{
-		strcpy_s(gsLastChunkSize, sizeof(gsLastChunkSize), "1024 * 1024");
+		strcpy_s(gsLastBlockSize, sizeof(gsLastBlockSize), "1024 * 1024");
 	}
 
-	dwsRegValueSz = sizeof(gsLastIOS);
-	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlocksPerRun", gsLastIOS, dwsRegValueSz))
+	dwsRegValueSz = sizeof(gsLastFileSize);
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "FileSize", gsLastFileSize, dwsRegValueSz))
 	{
-		strcpy_s(gsLastIOS, sizeof(gsLastIOS), "64");
+		strcpy_s(gsLastFileSize, sizeof(gsLastFileSize), "1024 * 1024 * 1024");
 	}
 
-	dwsRegValueSz = sizeof(gsLastIterations);
-	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Runs", gsLastIterations, dwsRegValueSz))
+	dwsRegValueSz = sizeof(gsLastDuration);
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Duration", gsLastDuration, dwsRegValueSz))
 	{
-		strcpy_s(gsLastIterations, sizeof(gsLastIterations), "16");
+		strcpy_s(gsLastDuration, sizeof(gsLastDuration), "30");
 	}
 
 	gbUseWriteCache = Get_BOOLRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "AllowCache");

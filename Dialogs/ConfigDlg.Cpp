@@ -96,9 +96,9 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	//--------------------------------------------------------------------------
 
 	static HWND hDiskDrive = NULL;
-	static HWND hChunkSize = NULL;
-	static HWND hIOS = NULL;
-	static HWND hIterations = NULL;
+	static HWND hBlockSize = NULL;
+	static HWND hFileSize = NULL;
+	static HWND hDuration = NULL;
 
 	//--------------------------------------------------------------------------
 
@@ -116,16 +116,16 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		SendMessage(hWnd, WM_SETICON, TRUE, (LPARAM)LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN)));
 
 		hDiskDrive = GetDlgItem(hWnd, IDC_DISKDRIVE);
-		hChunkSize = GetDlgItem(hWnd, IDC_CHUNKSIZE);
-		hIOS = GetDlgItem(hWnd, IDC_IOS);
-		hIterations = GetDlgItem(hWnd, IDC_ITERATIONS);
+		hBlockSize = GetDlgItem(hWnd, IDC_BLOCKSIZE);
+		hFileSize = GetDlgItem(hWnd, IDC_FILESIZE);
+		hDuration = GetDlgItem(hWnd, IDC_DURATION);
 
 		PopDiskInformation(hDiskDrive);
 
 		SelectComboItem(hDiskDrive, gsDrive, 3);
-		Set_Text(hChunkSize, gsLastChunkSize);
-		Set_Text(hIOS, gsLastIOS);
-		Set_Text(hIterations, gsLastIterations);
+		Set_Text(hBlockSize, gsLastBlockSize);
+		Set_Text(hFileSize, gsLastFileSize);
+		Set_Text(hDuration, gsLastDuration);
 
 		if (gbUseWriteCache)
 		{
@@ -172,10 +172,12 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			gbUseWriteCache = (IsDlgButtonChecked(hWnd, IDC_ALLOWCACHING) == BST_CHECKED);
 
-			struct { HWND hEdit; char* sText; int iTextSz; int* piValue; const char* sName; } fields[3] = {
-				{ hChunkSize, gsLastChunkSize, (int)sizeof(gsLastChunkSize), &giBufferSize, "Block size" },
-				{ hIOS, gsLastIOS, (int)sizeof(gsLastIOS), &giRounds, "Blocks per run" },
-				{ hIterations, gsLastIterations, (int)sizeof(gsLastIterations), &giRuns, "Runs" }
+			double dBlockSize = 0, dFileSize = 0, dDuration = 0;
+
+			struct { HWND hEdit; char* sText; int iTextSz; double* pdValue; const char* sName; } fields[3] = {
+				{ hBlockSize, gsLastBlockSize, (int)sizeof(gsLastBlockSize), &dBlockSize, "Block size" },
+				{ hFileSize, gsLastFileSize, (int)sizeof(gsLastFileSize), &dFileSize, "Test file size" },
+				{ hDuration, gsLastDuration, (int)sizeof(gsLastDuration), &dDuration, "Duration" }
 			};
 
 			for (int i = 0; i < 3; i++)
@@ -187,7 +189,7 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					return true;
 				}
 
-				if (mathParser.Calculate(fields[i].sText, fields[i].piValue) != CMathParser::ResultOk)
+				if (mathParser.Calculate(fields[i].sText, fields[i].pdValue) != CMathParser::ResultOk)
 				{
 					sprintf_s(sText, sizeof(sText), "An error occurred parsing \"%s\": %s", fields[i].sName, mathParser.LastError()->Text);
 					MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
@@ -200,40 +202,43 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			ms.dwLength = sizeof(ms);
 			GlobalMemoryStatusEx(&ms);
 
-			if (giBufferSize < 1)
+			if (dBlockSize < 1)
 			{
 				MessageBox(hWnd, "The \"Block size\" must be greater than zero.", gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
-			else if ((unsigned __int64)giBufferSize > (ms.ullTotalPhys / 4))
+			else if (dBlockSize > (double)(ms.ullTotalPhys / 4) || dBlockSize > 1073741824.0)
 			{
 				char sSize[64];
-				sprintf_s(sText, "The \"Block size\" cannot exceed 1/4th of physical RAM (%s)",
+				sprintf_s(sText, "The \"Block size\" cannot exceed 1/4th of physical RAM (%s) or 1 GB.",
 					FileSizeFriendly((__int64)(ms.ullTotalPhys / 4), sSize, sizeof(sSize)));
 				MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
+			giBlockSize = (int)dBlockSize;
 
-			if (giRounds < 1 || giRounds > 100000)
+			if (dDuration < 1 || dDuration > 86400)
 			{
-				MessageBox(hWnd, "\"Blocks per run\" must be between 1 and 100,000.", gsTitleCaption, MB_ICONINFORMATION);
+				MessageBox(hWnd, "\"Duration\" must be between 1 and 86,400 seconds.", gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
-
-			if (giRuns < 1 || giRuns > 10000)
-			{
-				MessageBox(hWnd, "\"Runs\" must be between 1 and 10,000.", gsTitleCaption, MB_ICONINFORMATION);
-				return true;
-			}
+			giDurationSeconds = (int)dDuration;
 
 			// Reads are always unbuffered, so the block size must always be a sector multiple.
-			int iSectorAligned = SectorAlign(gsDrive, giBufferSize);
+			int iSectorAligned = SectorAlign(gsDrive, giBlockSize);
 			if (iSectorAligned <= 0)
 			{
 				MessageBox(hWnd, "Failed to determine the sector size of the selected volume.", gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
-			giBufferSize = iSectorAligned;
+			giBlockSize = iSectorAligned;
+
+			if (dFileSize < (double)giBlockSize)
+			{
+				MessageBox(hWnd, "The \"Test file size\" must be at least one block.", gsTitleCaption, MB_ICONINFORMATION);
+				return true;
+			}
+			giFileSize = (__int64)dFileSize;
 
 			char sVolumeNameBuffer[1024];
 			DWORD dwFileSystemFlags;
@@ -257,7 +262,7 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				ULARGE_INTEGER FreeBytesAvailable;
 				if (GetDiskFreeSpaceEx(gsDrive, &FreeBytesAvailable, NULL, NULL))
 				{
-					unsigned __int64 i64FileSize = (unsigned __int64)giBufferSize * (unsigned __int64)giRounds;
+					unsigned __int64 i64FileSize = (unsigned __int64)giFileSize;
 
 					if (i64FileSize >= FreeBytesAvailable.QuadPart)
 					{
@@ -280,9 +285,9 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				return true;
 			}
 
-			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastChunkSize);
-			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlocksPerRun", gsLastIOS);
-			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Runs", gsLastIterations);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastBlockSize);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "FileSize", gsLastFileSize);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Duration", gsLastDuration);
 			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "LastDrive", gsDrive);
 			Set_BOOLRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "AllowCache", gbUseWriteCache);
 
@@ -360,4 +365,3 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-

@@ -32,9 +32,9 @@ char gsFileVersion[32];
 char gsTitleCaption[64];
 char gsRegistryKey[255];
 
-char gsLastChunkSize[1024];
-char gsLastIOS[1024];
-char gsLastIterations[1024];
+char gsLastBlockSize[1024];
+char gsLastFileSize[1024];
+char gsLastDuration[1024];
 
 MemoryPool gMem;
 

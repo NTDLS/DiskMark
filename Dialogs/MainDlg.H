@@ -5,9 +5,9 @@
 extern HWND hMainDialog;
 
 extern char gsDrive[MAX_PATH];
-extern int giBufferSize;	// Block size in bytes.
-extern int giRuns;			// Timed runs per phase.
-extern int giRounds;		// Blocks per run.
+extern int giBlockSize;	// Block size in bytes.
+extern int giDurationSeconds;	// Seconds to run each phase (write, then read).
+extern __int64 giFileSize;	// Test file size in bytes.
 extern bool gbUseWriteCache;
 
 extern HANDLE hThread;

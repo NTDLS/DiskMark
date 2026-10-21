@@ -14,9 +14,9 @@ extern char gsFileVersion[32];
 extern char gsTitleCaption[64];
 extern char gsRegistryKey[255];
 
-extern char gsLastChunkSize[1024];
-extern char gsLastIOS[1024];
-extern char gsLastIterations[1024];
+extern char gsLastBlockSize[1024];
+extern char gsLastFileSize[1024];
+extern char gsLastDuration[1024];
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

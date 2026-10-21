@@ -60,7 +60,7 @@ IDI_MAIN                ICON                    "MainIcon.ico"
 // Dialog
 //
 
-IDD_CONFIG DIALOGEX 0, 0, 236, 150
+IDD_CONFIG DIALOGEX 0, 0, 236, 158
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Benchmark Settings"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -68,16 +68,17 @@ BEGIN
     LTEXT           "Disk drive:",IDC_STATIC,10,12,60,8
     COMBOBOX        IDC_DISKDRIVE,76,10,150,100,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Block size:",IDC_STATIC,10,31,60,8
-    EDITTEXT        IDC_CHUNKSIZE,76,29,150,14,ES_AUTOHSCROLL
-    LTEXT           "Blocks per run:",IDC_STATIC,10,50,60,8
-    EDITTEXT        IDC_IOS,76,48,150,14,ES_AUTOHSCROLL
-    LTEXT           "Runs:",IDC_STATIC,10,69,60,8
-    EDITTEXT        IDC_ITERATIONS,76,67,150,14,ES_AUTOHSCROLL
-    CONTROL         "Allow OS write caching (flush is timed)",IDC_ALLOWCACHING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,86,150,10
-    LTEXT           "Values accept expressions such as 64 * 1024. Reads always bypass the OS cache so they measure the disk, not RAM.",IDC_CFGHINT,10,102,216,22
-    PUSHBUTTON      "Help",IDC_CMDHELP,10,129,45,14
-    PUSHBUTTON      "Cancel",IDC_CMDCANCEL,126,129,45,14
-    DEFPUSHBUTTON   "Start",IDC_CMDOK,181,129,45,14
+    EDITTEXT        IDC_BLOCKSIZE,76,29,150,14,ES_AUTOHSCROLL
+    LTEXT           "Test file size:",IDC_STATIC,10,50,60,8
+    EDITTEXT        IDC_FILESIZE,76,48,150,14,ES_AUTOHSCROLL
+    LTEXT           "Duration (sec):",IDC_STATIC,10,69,60,8
+    EDITTEXT        IDC_DURATION,76,67,150,14,ES_AUTOHSCROLL
+    CONTROL         "Allow OS write caching (flush is timed)",IDC_ALLOWCACHING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,86,150,10
+    LTEXT           "Writes run for the duration, then reads run for the same time, sampled once per second. Sizes accept expressions such as 64 * 1024. Reads always bypass the OS cache.",IDC_CFGHINT,10,102,216,30
+    PUSHBUTTON      "Help",IDC_CMDHELP,10,137,45,14
+    PUSHBUTTON      "Cancel",IDC_CMDCANCEL,126,137,45,14
+    DEFPUSHBUTTON   "Start",IDC_CMDOK,181,137,45,14
 END
 
 IDD_MAIN DIALOGEX 0, 0, 470, 277
@@ -91,17 +92,13 @@ BEGIN
     LTEXT           "Write cache:",IDC_STATIC,14,28,44,8
     LTEXT           "n/a",IDC_ALLOWCACHE,60,28,84,8
     LTEXT           "Block size:",IDC_STATIC,150,16,54,8
-    LTEXT           "n/a",IDC_CHUNKSIZE,208,16,70,8
-    LTEXT           "Blocks per run:",IDC_STATIC,150,28,54,8
-    LTEXT           "n/a",IDC_IOS,208,28,70,8
-    LTEXT           "Data per run:",IDC_STATIC,150,40,54,8
-    LTEXT           "n/a",IDC_BYTESPERITERATION,208,40,70,8
-    LTEXT           "Runs:",IDC_STATIC,290,16,58,8
-    LTEXT           "n/a",IDC_ITERATIONS,352,16,104,8
-    LTEXT           "Total data:",IDC_STATIC,290,28,58,8
-    LTEXT           "n/a",IDC_TOTALDATASETSIZE,352,28,104,8
+    LTEXT           "n/a",IDC_BLOCKSIZE,208,16,70,8
+    LTEXT           "Test file size:",IDC_STATIC,150,28,54,8
+    LTEXT           "n/a",IDC_FILESIZE,208,28,70,8
+    LTEXT           "Duration:",IDC_STATIC,290,16,58,8
+    LTEXT           "n/a",IDC_DURATION,352,16,104,8
     GROUPBOX        "Write Performance",IDC_STATIC,7,62,190,78
-    CONTROL         "n/a",IDC_AVGWRITE,"Static",SS_LEFT,14,73,180,18
+    LTEXT           "n/a",IDC_AVGWRITE,14,73,180,18,NOT WS_GROUP
     LTEXT           "average throughput",IDC_STATIC,14,92,100,8
     LTEXT           "Last:",IDC_STATIC,14,104,26,8
     LTEXT           "n/a",IDC_LASTWRITE,44,104,56,8
@@ -117,7 +114,7 @@ BEGIN
     LTEXT           "n/a",IDC_DISKTIMEWRITE,140,124,54,8
     CONTROL         "",IDC_GRAPHWRITE,"Static",SS_BLACKRECT | SS_SUNKEN,202,66,261,70
     GROUPBOX        "Read Performance",IDC_STATIC,7,144,190,78
-    CONTROL         "n/a",IDC_AVGREAD,"Static",SS_LEFT,14,155,180,18
+    LTEXT           "n/a",IDC_AVGREAD,14,155,180,18,NOT WS_GROUP
     LTEXT           "average throughput",IDC_STATIC,14,174,100,8
     LTEXT           "Last:",IDC_STATIC,14,186,26,8
     LTEXT           "n/a",IDC_LASTREAD,44,186,56,8
@@ -202,8 +199,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,2,0
- PRODUCTVERSION 1,0,0,8
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -221,12 +218,12 @@ BEGIN
             VALUE "Comments", "Disk Benchmarking Utility"
             VALUE "CompanyName", "NetworkDLS"
             VALUE "FileDescription", "Disk Benchmarking Utility"
-            VALUE "FileVersion", "1.0.2.0"
+            VALUE "FileVersion", "2.0.0.0"
             VALUE "InternalName", "DiskMark"
-            VALUE "LegalCopyright", "Copyright © 2025 NetworkDLS"
+            VALUE "LegalCopyright", "Copyright © 2026 NetworkDLS"
             VALUE "OriginalFilename", "DiskMark.exe"
             VALUE "ProductName", "DiskMark"
-            VALUE "ProductVersion", "1.0.2.0"
+            VALUE "ProductVersion", "2.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -268,8 +265,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_TITLECAPTION        "DiskMark"
-    IDS_FILEVERSION         "1.0.2.0"
-    IDS_APPCOPYRIGHT        "Copyright © 2025 NetworkDLS. All rights reserved."
+    IDS_FILEVERSION         "2.0.0.0"
+    IDS_APPCOPYRIGHT        "Copyright © 2026 NetworkDLS. All rights reserved."
     IDS_REGISTRYKEY         "Software\\NetWorkDLS\\DiskMark"
 END
 

@@ -6,8 +6,8 @@ DiskMark is a small utility that allows you to benchmark your disks and hard dri
 
 
 ## How the numbers are measured
-- Each *run* times `Blocks per run` sequential I/Os of `Block size` bytes against one temporary file (created on the selected drive and deleted afterwards). A write phase of `Runs` runs is followed by a read phase of `Runs` runs.
-- **Average** is total bytes / total time across all runs (not a mean of per-run rates). **Min/Max/Last** are per-run throughput. **IOPS** and **Latency** are per-block averages. 1 MB = 1,048,576 bytes.
+- The test writes sequential `Block size` I/Os to a temporary `Test file size` file (created on the selected drive and deleted afterwards), wrapping around the file, for `Duration` seconds; then reads it back for the same time. Throughput is sampled once per second.
+- **Average** is total bytes / total time (not a mean of per-sample rates). **Min/Max/Last** are per-second-sample throughput. **IOPS** and **Latency** are per-block averages. 1 MB = 1,048,576 bytes.
 - Writes use `FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH` unless *Allow OS write caching* is ticked, in which case the file flush is included in the timed region so the disk, not RAM, is measured.
 - Reads are always unbuffered, so they come from the device rather than the Windows file cache. Block size is rounded up to the volume's sector size.
 - The I/O buffer is page aligned and filled with incompressible pseudo-random data.

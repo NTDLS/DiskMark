@@ -82,18 +82,18 @@ static void FillRandom(unsigned char* pBuffer, DWORD dwSize, unsigned __int64 u6
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void AccumulateRun(BENCHSTATS* pStats, double dSeconds, unsigned __int64 u64Bytes, unsigned __int64 u64Blocks)
+static void AccumulateSample(BENCHSTATS* pStats, double dSeconds, unsigned __int64 u64Bytes, unsigned __int64 u64Blocks)
 {
 	double dMBps = ((double)u64Bytes / dSeconds) / BENCH_BYTES_PER_MB;
 
-	pStats->RunsCompleted++;
+	pStats->Samples++;
 	pStats->LastMBps = dMBps;
 
-	if (pStats->RunsCompleted == 1 || dMBps < pStats->MinMBps)
+	if (pStats->Samples == 1 || dMBps < pStats->MinMBps)
 	{
 		pStats->MinMBps = dMBps;
 	}
-	if (pStats->RunsCompleted == 1 || dMBps > pStats->MaxMBps)
+	if (pStats->Samples == 1 || dMBps > pStats->MaxMBps)
 	{
 		pStats->MaxMBps = dMBps;
 	}
@@ -109,9 +109,17 @@ static void AccumulateRun(BENCHSTATS* pStats, double dSeconds, unsigned __int64 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static double SecondsBetween(const LARGE_INTEGER& liStart, const LARGE_INTEGER& liStop, const LARGE_INTEGER& liFrequency)
+{
+	return (double)(liStop.QuadPart - liStart.QuadPart) / (double)liFrequency.QuadPart;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Issues sequential I/O for DurationSeconds, wrapping at u64BlocksInFile, and records one sample per interval.
 static BenchResult RunPhase(BenchPhase ePhase, HANDLE hFile, unsigned char* pBuffer, const BENCHCONFIG* pConfig,
-	volatile bool* pbCancel, BenchProgressCallback pCallback, void* pContext, int iStepBase, BENCHSTATS* pStats,
-	char* sError, size_t iErrorSz)
+	unsigned __int64 u64BlocksInFile, volatile bool* pbCancel, BenchProgressCallback pCallback, void* pContext,
+	double dPhaseOffsetSeconds, BENCHSTATS* pStats, char* sError, size_t iErrorSz)
 {
 	LARGE_INTEGER liFrequency;
 	QueryPerformanceFrequency(&liFrequency);
@@ -119,30 +127,58 @@ static BenchResult RunPhase(BenchPhase ePhase, HANDLE hFile, unsigned char* pBuf
 	memset(pStats, 0, sizeof(BENCHSTATS));
 	pStats->Phase = ePhase;
 
+	const int iTotalMs = pConfig->DurationSeconds * 2 * 1000;
+
 	if (pCallback)
 	{
-		pCallback(pContext, BenchEventPhaseStart, pStats, iStepBase, pConfig->Runs * 2);
+		pCallback(pContext, BenchEventPhaseStart, pStats, (int)(dPhaseOffsetSeconds * 1000.0), iTotalMs);
 	}
 
 	LARGE_INTEGER liZero;
 	liZero.QuadPart = 0;
 
-	for (int iRun = 0; iRun < pConfig->Runs; iRun++)
+	if (!SetFilePointerEx(hFile, liZero, NULL, FILE_BEGIN))
 	{
-		if (!SetFilePointerEx(hFile, liZero, NULL, FILE_BEGIN))
+		SetLastErrorText(sError, iErrorSz, "seek in", "the test file");
+		return BenchFailed;
+	}
+
+	unsigned __int64 u64Position = 0; // Next block index.
+
+	LARGE_INTEGER liPhaseStart;
+	QueryPerformanceCounter(&liPhaseStart);
+
+	for (;;)
+	{
+		LARGE_INTEGER liNow;
+		QueryPerformanceCounter(&liNow);
+
+		double dRemaining = (double)pConfig->DurationSeconds - SecondsBetween(liPhaseStart, liNow, liFrequency);
+		if (dRemaining < 0.1)
 		{
-			SetLastErrorText(sError, iErrorSz, "seek in", pConfig->Drive);
-			return BenchFailed;
+			break; // Not worth a sample.
 		}
 
-		LARGE_INTEGER liStart, liStop;
-		QueryPerformanceCounter(&liStart);
+		double dTarget = (dRemaining < BENCH_SAMPLE_SECONDS) ? dRemaining : BENCH_SAMPLE_SECONDS;
 
-		for (int iBlock = 0; iBlock < pConfig->BlocksPerRun; iBlock++)
-		{
+		LARGE_INTEGER liStart = liNow;
+		double dElapsed = 0;
+		unsigned __int64 u64Blocks = 0;
+
+		do {
 			if (*pbCancel)
 			{
 				return BenchCancelled;
+			}
+
+			if (u64Position >= u64BlocksInFile)
+			{
+				if (!SetFilePointerEx(hFile, liZero, NULL, FILE_BEGIN))
+				{
+					SetLastErrorText(sError, iErrorSz, "seek in", "the test file");
+					return BenchFailed;
+				}
+				u64Position = 0;
 			}
 
 			DWORD dwTransferred = 0;
@@ -159,7 +195,13 @@ static BenchResult RunPhase(BenchPhase ePhase, HANDLE hFile, unsigned char* pBuf
 				SetLastErrorText(sError, iErrorSz, (ePhase == BenchPhaseWrite) ? "write to" : "read from", "the test file");
 				return BenchFailed;
 			}
-		}
+
+			u64Position++;
+			u64Blocks++;
+
+			QueryPerformanceCounter(&liNow);
+			dElapsed = SecondsBetween(liStart, liNow, liFrequency);
+		} while (dElapsed < dTarget);
 
 		if (ePhase == BenchPhaseWrite && pConfig->AllowWriteCache)
 		{
@@ -169,22 +211,17 @@ static BenchResult RunPhase(BenchPhase ePhase, HANDLE hFile, unsigned char* pBuf
 				SetLastErrorText(sError, iErrorSz, "flush", "the test file");
 				return BenchFailed;
 			}
+
+			QueryPerformanceCounter(&liNow);
+			dElapsed = SecondsBetween(liStart, liNow, liFrequency);
 		}
 
-		QueryPerformanceCounter(&liStop);
-
-		double dSeconds = (double)(liStop.QuadPart - liStart.QuadPart) / (double)liFrequency.QuadPart;
-		if (dSeconds <= 0)
-		{
-			continue; // Unmeasurably short; skip rather than report an infinite rate.
-		}
-
-		AccumulateRun(pStats, dSeconds,
-			(unsigned __int64)pConfig->BlockSize * pConfig->BlocksPerRun, (unsigned __int64)pConfig->BlocksPerRun);
+		AccumulateSample(pStats, dElapsed, u64Blocks * pConfig->BlockSize, u64Blocks);
 
 		if (pCallback)
 		{
-			pCallback(pContext, BenchEventRunDone, pStats, iStepBase + iRun + 1, pConfig->Runs * 2);
+			double dPhaseElapsed = SecondsBetween(liPhaseStart, liNow, liFrequency);
+			pCallback(pContext, BenchEventSample, pStats, (int)((dPhaseOffsetSeconds + dPhaseElapsed) * 1000.0), iTotalMs);
 		}
 	}
 
@@ -198,9 +235,9 @@ BenchResult RunDiskBench(const BENCHCONFIG* pConfig, volatile bool* pbCancel,
 {
 	sError[0] = '\0';
 
-	if (pConfig->BlockSize == 0 || pConfig->BlocksPerRun < 1 || pConfig->Runs < 1)
+	if (pConfig->BlockSize == 0 || pConfig->FileSize < (__int64)pConfig->BlockSize || pConfig->DurationSeconds < 1)
 	{
-		strcpy_s(sError, iErrorSz, "Invalid benchmark parameters.");
+		strcpy_s(sError, iErrorSz, "Invalid benchmark parameters. The test file must hold at least one block.");
 		return BenchFailed;
 	}
 
@@ -274,9 +311,11 @@ BenchResult RunDiskBench(const BENCHCONFIG* pConfig, volatile bool* pbCancel,
 		return BenchFailed;
 	}
 
-	// Reserve the space up front so the timed runs measure writes, not file-system growth.
+	// Whole blocks only. Reserve the space up front so the timed I/O measures writes, not file-system growth.
+	unsigned __int64 u64BlocksInFile = (unsigned __int64)pConfig->FileSize / pConfig->BlockSize;
+
 	LARGE_INTEGER liSize;
-	liSize.QuadPart = (__int64)pConfig->BlockSize * pConfig->BlocksPerRun;
+	liSize.QuadPart = (__int64)(u64BlocksInFile * pConfig->BlockSize);
 	if (!SetFilePointerEx(hFile, liSize, NULL, FILE_BEGIN) || !SetEndOfFile(hFile))
 	{
 		SetLastErrorText(sError, iErrorSz, "allocate the temporary file", sFileName);
@@ -290,15 +329,19 @@ BenchResult RunDiskBench(const BENCHCONFIG* pConfig, volatile bool* pbCancel,
 		return BenchFailed;
 	}
 
-	eResult = RunPhase(BenchPhaseWrite, hFile, pBuffer, pConfig, pbCancel, pCallback, pContext, 0, &writeStats, sError, iErrorSz);
+	eResult = RunPhase(BenchPhaseWrite, hFile, pBuffer, pConfig, u64BlocksInFile, pbCancel, pCallback, pContext,
+		0.0, &writeStats, sError, iErrorSz);
 	CloseHandle(hFile);
 	hFile = INVALID_HANDLE_VALUE;
 
 	//-------------------------------------------------------------------------------------------------------------
 	// Read phase. Always unbuffered so the numbers come from the device rather than the file cache.
+	// Only the region the write phase actually filled is read: unwritten space reads back as instant zeros.
 
 	if (eResult == BenchOk)
 	{
+		unsigned __int64 u64BlocksWritten = (writeStats.TotalBlocks < u64BlocksInFile) ? writeStats.TotalBlocks : u64BlocksInFile;
+
 		hFile = CreateFile(sFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
@@ -306,7 +349,8 @@ BenchResult RunDiskBench(const BENCHCONFIG* pConfig, volatile bool* pbCancel,
 			eResult = BenchFailed;
 		}
 		else {
-			eResult = RunPhase(BenchPhaseRead, hFile, pBuffer, pConfig, pbCancel, pCallback, pContext, pConfig->Runs, &readStats, sError, iErrorSz);
+			eResult = RunPhase(BenchPhaseRead, hFile, pBuffer, pConfig, u64BlocksWritten, pbCancel, pCallback, pContext,
+				(double)pConfig->DurationSeconds, &readStats, sError, iErrorSz);
 			CloseHandle(hFile);
 		}
 	}

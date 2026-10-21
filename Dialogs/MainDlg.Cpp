@@ -33,11 +33,9 @@ HWND hMainDialog = NULL;
 
 HWND hDriveInfo = NULL;
 HWND hAllowCache = NULL;
-HWND hIOS = NULL;
-HWND hIterations = NULL;
-HWND hChunkSize = NULL;
-HWND hBytesPerIteration = NULL;
-HWND hTotalDatasetSize = NULL;
+HWND hFileSize = NULL;
+HWND hDuration = NULL;
+HWND hBlockSize = NULL;
 
 HWND hWriteDiskTime = NULL;
 HWND hWriteLast = NULL;
@@ -66,9 +64,9 @@ CGraph* pReadGraph;
 HFONT ghBigFont = NULL;
 
 char gsDrive[MAX_PATH];
-int giBufferSize = 0;
-int giRuns = 0;
-int giRounds = 0;
+int giBlockSize = 0;
+int giDurationSeconds = 0;
+__int64 giFileSize = 0;
 bool gbUseWriteCache = false;
 
 HANDLE hThread = NULL;
@@ -189,21 +187,14 @@ void ShowConfiguration(const BENCHCONFIG* pConfig)
 	Set_Text(hDriveInfo, pConfig->Drive);
 	Set_Text(hAllowCache, pConfig->AllowWriteCache ? "Allowed (flush timed)" : "Off (write-through)");
 
-	FormatInteger(sTemp, sizeof(sTemp), pConfig->Runs);
-	Set_Text(hIterations, sTemp);
+	sprintf_s(sTemp, sizeof(sTemp), "%d s per phase", pConfig->DurationSeconds);
+	Set_Text(hDuration, sTemp);
 
-	FormatInteger(sTemp, sizeof(sTemp), pConfig->BlocksPerRun);
-	Set_Text(hIOS, sTemp);
+	FileSizeFriendly(pConfig->FileSize, sTemp, sizeof(sTemp));
+	Set_Text(hFileSize, sTemp);
 
 	FileSizeFriendly((__int64)pConfig->BlockSize, sTemp, sizeof(sTemp));
-	Set_Text(hChunkSize, sTemp);
-
-	FileSizeFriendly((__int64)pConfig->BlockSize * (__int64)pConfig->BlocksPerRun, sTemp, sizeof(sTemp));
-	Set_Text(hBytesPerIteration, sTemp);
-
-	//Each phase moves the data set once.
-	FileSizeFriendly((__int64)pConfig->BlockSize * (__int64)pConfig->BlocksPerRun * (__int64)pConfig->Runs, sTemp, sizeof(sTemp));
-	Set_Text(hTotalDatasetSize, sTemp);
+	Set_Text(hBlockSize, sTemp);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +228,7 @@ void ShowStats(const BENCHSTATS* pStats)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void BenchProgress(void* pContext, BenchEvent eEvent, const BENCHSTATS* pStats, int iStep, int iTotalSteps)
+void BenchProgress(void* pContext, BenchEvent eEvent, const BENCHSTATS* pStats, int iElapsedMs, int iTotalMs)
 {
 	bool bWrite = (pStats->Phase == BenchPhaseWrite);
 	char sTemp[256];
@@ -268,22 +259,23 @@ void BenchProgress(void* pContext, BenchEvent eEvent, const BENCHSTATS* pStats, 
 	dValues[3] = pStats->LastMBps;
 
 	CGraph* pGraph = bWrite ? pWriteGraph : pReadGraph;
-	//The graph advances one pixel per update. Repeat each run so short tests still span the plot as a step chart.
-	int iPixelsPerRun = pGraph->Width() / (gBenchConfig.Runs > 0 ? gBenchConfig.Runs : 1);
-	if (iPixelsPerRun < 1)
+	//The graph advances one pixel per update. Repeat each sample so the whole test spans the plot as a step chart.
+	int iPixelsPerSample = pGraph->Width() / (gBenchConfig.DurationSeconds > 0 ? gBenchConfig.DurationSeconds : 1);
+	if (iPixelsPerSample < 1)
 	{
-		iPixelsPerRun = 1;
+		iPixelsPerSample = 1;
 	}
-	for (int i = 0; i < iPixelsPerRun; i++)
+	for (int i = 0; i < iPixelsPerSample; i++)
 	{
 		pGraph->Update(dValues);
 	}
 	pGraph->Invalidate();
 
-	sprintf_s(sTemp, sizeof(sTemp), "%s test: run %d of %d", bWrite ? "Write" : "Read", pStats->RunsCompleted, gBenchConfig.Runs);
+	sprintf_s(sTemp, sizeof(sTemp), "%s test: %d of %d s", bWrite ? "Write" : "Read",
+		(int)(pStats->TotalSeconds + 0.5), gBenchConfig.DurationSeconds);
 	Set_Text(hStatus, sTemp);
 
-	SendMessage(hProgress, PBM_SETPOS, iStep, (LPARAM)0);
+	SendMessage(hProgress, PBM_SETPOS, iElapsedMs, (LPARAM)0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,9 +291,9 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 
 	memset(&gBenchConfig, 0, sizeof(gBenchConfig));
 	strcpy_s(gBenchConfig.Drive, sizeof(gBenchConfig.Drive), gsDrive);
-	gBenchConfig.BlockSize = (DWORD)giBufferSize;
-	gBenchConfig.BlocksPerRun = giRounds;
-	gBenchConfig.Runs = giRuns;
+	gBenchConfig.BlockSize = (DWORD)giBlockSize;
+	gBenchConfig.FileSize = giFileSize;
+	gBenchConfig.DurationSeconds = giDurationSeconds;
 	gBenchConfig.AllowWriteCache = gbUseWriteCache;
 
 	gbHaveWriteStats = false;
@@ -310,7 +302,7 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 	ResetCounters();
 	ShowConfiguration(&gBenchConfig);
 
-	SendMessage(hProgress, PBM_SETRANGE32, 0, (LPARAM)giRuns * 2);
+	SendMessage(hProgress, PBM_SETRANGE32, 0, (LPARAM)giDurationSeconds * 2 * 1000);
 
 	char sError[1024];
 	BenchResult eResult = RunDiskBench(&gBenchConfig, &gbCancel, BenchProgress, NULL, sError, sizeof(sError));
@@ -321,7 +313,7 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 		sprintf_s(sTemp, sizeof(sTemp), "Complete. Write %.1f MB/s, Read %.1f MB/s (averages).",
 			gWriteStats.AvgMBps, gReadStats.AvgMBps);
 		Set_Text(hStatus, sTemp);
-		SendMessage(hProgress, PBM_SETPOS, giRuns * 2, (LPARAM)0);
+		SendMessage(hProgress, PBM_SETPOS, giDurationSeconds * 2 * 1000, (LPARAM)0);
 	}
 	else if (eResult == BenchCancelled)
 	{
@@ -356,10 +348,13 @@ void CopyResultsToClipboard(HWND hWnd)
 
 	FileSizeFriendly((__int64)gBenchConfig.BlockSize, sBlock, sizeof(sBlock));
 
+	char sFile[64];
+	FileSizeFriendly(gBenchConfig.FileSize, sFile, sizeof(sFile));
+
 	int iLen = sprintf_s(sReport, sizeof(sReport),
 		"%s %s\r\n"
-		"Drive: %s   Block size: %s   Blocks per run: %d   Runs: %d   Write cache: %s\r\n",
-		gsTitleCaption, gsFileVersion, gBenchConfig.Drive, sBlock, gBenchConfig.BlocksPerRun, gBenchConfig.Runs,
+		"Drive: %s   Block size: %s   Test file: %s   Duration: %d s per phase   Write cache: %s\r\n",
+		gsTitleCaption, gsFileVersion, gBenchConfig.Drive, sBlock, sFile, gBenchConfig.DurationSeconds,
 		gBenchConfig.AllowWriteCache ? "allowed" : "off");
 
 	const BENCHSTATS* pStats[2] = { &gWriteStats, &gReadStats };
@@ -377,9 +372,9 @@ void CopyResultsToClipboard(HWND hWnd)
 		FormatRate(pStats[i]->AvgMBps, sRate, sizeof(sRate));
 
 		iLen += sprintf_s(sReport + iLen, sizeof(sReport) - iLen,
-			"%s: avg %s, last %.1f, min %.1f, max %.1f MB/s, %.0f IOPS, %s latency, %d runs\r\n",
+			"%s: avg %s, last %.1f, min %.1f, max %.1f MB/s, %.0f IOPS, %s latency, %d samples\r\n",
 			sPhase[i], sRate, pStats[i]->LastMBps, pStats[i]->MinMBps, pStats[i]->MaxMBps,
-			pStats[i]->Iops, sLatency, pStats[i]->RunsCompleted);
+			pStats[i]->Iops, sLatency, pStats[i]->Samples);
 	}
 
 	if (OpenClipboard(hWnd))
@@ -428,11 +423,9 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		hDriveInfo = GetDlgItem(hWnd, IDC_DRIVEINFO);
 		hAllowCache = GetDlgItem(hWnd, IDC_ALLOWCACHE);
-		hIOS = GetDlgItem(hWnd, IDC_IOS);
-		hIterations = GetDlgItem(hWnd, IDC_ITERATIONS);
-		hChunkSize = GetDlgItem(hWnd, IDC_CHUNKSIZE);
-		hBytesPerIteration = GetDlgItem(hWnd, IDC_BYTESPERITERATION);
-		hTotalDatasetSize = GetDlgItem(hWnd, IDC_TOTALDATASETSIZE);
+		hFileSize = GetDlgItem(hWnd, IDC_FILESIZE);
+		hDuration = GetDlgItem(hWnd, IDC_DURATION);
+		hBlockSize = GetDlgItem(hWnd, IDC_BLOCKSIZE);
 		hProgress = GetDlgItem(hWnd, IDC_DSKPROGRESS);
 		hStatus = GetDlgItem(hWnd, IDC_STATUS);
 
@@ -483,11 +476,9 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ResetCounters();
 		Set_Text(hDriveInfo, "n/a");
 		Set_Text(hAllowCache, "n/a");
-		Set_Text(hIOS, "n/a");
-		Set_Text(hIterations, "n/a");
-		Set_Text(hChunkSize, "n/a");
-		Set_Text(hBytesPerIteration, "n/a");
-		Set_Text(hTotalDatasetSize, "n/a");
+		Set_Text(hFileSize, "n/a");
+		Set_Text(hDuration, "n/a");
+		Set_Text(hBlockSize, "n/a");
 		Set_Text(hStatus, "Ready.");
 		EnableWindow(GetDlgItem(hWnd, IDC_CMDCOPY), FALSE);
 
