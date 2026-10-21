@@ -14,6 +14,7 @@
 
 #include "../Source/Entry.H"
 #include "../Source/Routines.H"
+#include "../Source/DiskBench.H"
 
 #include "../Dialogs/ConfigDlg.H"
 #include "../Dialogs/MainDlg.H"
@@ -24,13 +25,13 @@
 using namespace NSWFL::Windows;
 using namespace NSWFL::Conversion;
 using namespace NSWFL::File;
-using namespace NSWFL::DateTime;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //---------------------(Variable Declarations)
 HWND hMainDialog = NULL;
 
+HWND hDriveInfo = NULL;
 HWND hAllowCache = NULL;
 HWND hIOS = NULL;
 HWND hIterations = NULL;
@@ -43,19 +44,26 @@ HWND hWriteLast = NULL;
 HWND hWriteAvg = NULL;
 HWND hWriteMin = NULL;
 HWND hWriteMax = NULL;
+HWND hWriteIops = NULL;
+HWND hWriteLatency = NULL;
 
 HWND hReadDiskTime = NULL;
 HWND hReadLast = NULL;
 HWND hReadAvg = NULL;
 HWND hReadMin = NULL;
 HWND hReadMax = NULL;
+HWND hReadIops = NULL;
+HWND hReadLatency = NULL;
 
 HWND hProgress = NULL;
+HWND hStatus = NULL;
 HWND hWriteGraph = NULL;
 HWND hReadGraph = NULL;
 
 CGraph* pWriteGraph;
 CGraph* pReadGraph;
+
+HFONT ghBigFont = NULL;
 
 char gsDrive[MAX_PATH];
 int giBufferSize = 0;
@@ -65,80 +73,88 @@ bool gbUseWriteCache = false;
 
 HANDLE hThread = NULL;
 DWORD dwThreadID = 0;
-bool gbCancel = false;
+volatile bool gbCancel = false;
+
+//Results of the most recent test, for "Copy Results".
+BENCHCONFIG gBenchConfig;
+BENCHSTATS gWriteStats;
+BENCHSTATS gReadStats;
+bool gbHaveWriteStats = false;
+bool gbHaveReadStats = false;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define WM_APP_SHOWCONFIG (WM_APP + 1)
+
+#define GRAPH_COLOR_MIN   RGB(239, 83, 80)
+#define GRAPH_COLOR_MAX   RGB(102, 187, 106)
+#define GRAPH_COLOR_AVG   RGB(176, 190, 197)
+#define GRAPH_COLOR_LAST  RGB(255, 213, 79)
 
 bool GraphTextFormatCallback(CGraph* pGraph, GRAPHSERIES* pSeries, GRAPHTEXTATTRIBUTES* pTextAttributes)
 {
 	pTextAttributes->BGMode = TRANSPARENT;
 	pTextAttributes->FGColor = pSeries->LineColor;
-	pTextAttributes->FontSize = 10;
+	pTextAttributes->FontSize = 9;
+	strcpy_s(pTextAttributes->FontName, sizeof(pTextAttributes->FontName), "Segoe UI");
+	pTextAttributes->y = 5;
 
-	char sSize[128];
-	char sSpace[20];
-	char* sPart = NULL;
-
-	FileSizeFriendly(pSeries->LastValue, 2, sSize, sizeof(sSize));
+	//The x position is managed by the graph: each series is laid out right to left, so Min ends up right-most.
 
 	if (pSeries->Index == 0)
 	{
-		if (pGraph == pWriteGraph)
-		{
-			GRAPHTEXTATTRIBUTES gta;
-			memcpy_s(&gta, sizeof(gta), pTextAttributes, sizeof(GRAPHTEXTATTRIBUTES));
-			strcpy_s(gta.Text, sizeof(gta.Text), "Writes:");
-			gta.x = 5;
-			gta.y = 5;
-			gta.FGColor = RGB(0, 255, 255);
+		//Start the legend a few pixels in from the right edge.
+		pTextAttributes->x = pGraph->Width() - 8;
 
-			pGraph->WriteText(&gta);
-		}
-		else if (pGraph == pReadGraph)
-		{
-			GRAPHTEXTATTRIBUTES gta;
-			memcpy_s(&gta, sizeof(gta), pTextAttributes, sizeof(GRAPHTEXTATTRIBUTES));
-			strcpy_s(gta.Text, sizeof(gta.Text), "Reads:");
-			gta.x = 5;
-			gta.y = 5;
-			gta.FGColor = RGB(0, 255, 255);
+		//Title, top left.
+		GRAPHTEXTATTRIBUTES gta;
+		memcpy_s(&gta, sizeof(gta), pTextAttributes, sizeof(GRAPHTEXTATTRIBUTES));
+		strcpy_s(gta.Text, sizeof(gta.Text), (pGraph == pWriteGraph) ? "Write (MB/s)" : "Read (MB/s)");
+		gta.x = 6;
+		gta.y = 5;
+		gta.FGColor = RGB(79, 195, 247);
+		pGraph->WriteText(&gta);
 
-			pGraph->WriteText(&gta);
-		}
-
-		pTextAttributes->x = pGraph->Width();
-		pTextAttributes->y = 5;
-		sPart = " Min";
+		//Vertical scale, bottom left.
+		strcpy_s(gta.FontName, sizeof(gta.FontName), "Segoe UI");
+		gta.FontSize = 8;
+		gta.FGColor = RGB(120, 130, 140);
+		sprintf_s(gta.Text, sizeof(gta.Text), "axis 0 - %.0f MB/s", pSeries->TopValue);
+		gta.x = 6;
+		gta.y = pGraph->Height() - MulDiv(16, GetDeviceCaps(gta.DC, LOGPIXELSY), 96);
+		pGraph->WriteText(&gta);
 	}
-	else if (pSeries->Index == 1)
+
+	static const char* sNames[] = { "Min", "Max", "Avg", "Last" };
+	const char* sName = (pSeries->Index >= 0 && pSeries->Index < 4) ? sNames[pSeries->Index] : "";
+
+	if (pSeries->LastValue > 0)
 	{
-		pTextAttributes->x = pGraph->Width();
-		pTextAttributes->y = 20;
-		sPart = " Max";
-	}
-	else if (pSeries->Index == 2)
-	{
-		pTextAttributes->x = pGraph->Width() - 150;
-		pTextAttributes->y = 20;
-		sPart = " Avg";
+		sprintf_s(pTextAttributes->Text, sizeof(pTextAttributes->Text), "%s %.1f", sName, pSeries->LastValue);
 	}
 	else {
-		pTextAttributes->x = pGraph->Width() - 150;
-		pTextAttributes->y = 5;
-		sPart = "Last";
+		sprintf_s(pTextAttributes->Text, sizeof(pTextAttributes->Text), "%s --", sName);
 	}
-
-	size_t iLen = strlen(sPart) + strlen(sSize) + 2;
-
-	sSpace[0] = '\0';
-	for (size_t i = iLen; i < 16; i++)
-	{
-		strcat_s(sSpace, sizeof(sSpace), " ");
-	}
-
-	sprintf_s(pTextAttributes->Text, sizeof(pTextAttributes->Text), "%s:%s%s", sPart, sSpace, sSize);
 
 	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void FormatRate(double dMBps, char* sOut, size_t iOutSz)
+{
+	sprintf_s(sOut, iOutSz, "%.1f MB/s", dMBps);
+}
+
+static void FormatLatency(double dMs, char* sOut, size_t iOutSz)
+{
+	if (dMs < 1.0)
+	{
+		sprintf_s(sOut, iOutSz, "%.0f us", dMs * 1000.0);
+	}
+	else {
+		sprintf_s(sOut, iOutSz, "%.2f ms", dMs);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,24 +164,15 @@ void ResetCounters(void)
 	pReadGraph->Reset();
 	pWriteGraph->Reset();
 
-	Set_Text(hAllowCache, "n/a");
-	Set_Text(hIOS, "n/a");
-	Set_Text(hIterations, "n/a");
-	Set_Text(hChunkSize, "n/a");
-	Set_Text(hBytesPerIteration, "n/a");
-	Set_Text(hTotalDatasetSize, "n/a");
+	HWND hControls[] = {
+		hWriteDiskTime, hWriteLast, hWriteAvg, hWriteMin, hWriteMax, hWriteIops, hWriteLatency,
+		hReadDiskTime, hReadLast, hReadAvg, hReadMin, hReadMax, hReadIops, hReadLatency
+	};
 
-	Set_Text(hWriteDiskTime, "n/a");
-	Set_Text(hWriteLast, "n/a");
-	Set_Text(hWriteAvg, "n/a");
-	Set_Text(hWriteMin, "n/a");
-	Set_Text(hWriteMax, "n/a");
-
-	Set_Text(hReadDiskTime, "n/a");
-	Set_Text(hReadLast, "n/a");
-	Set_Text(hReadAvg, "n/a");
-	Set_Text(hReadMin, "n/a");
-	Set_Text(hReadMax, "n/a");
+	for (int i = 0; i < sizeof(hControls) / sizeof(hControls[0]); i++)
+	{
+		Set_Text(hControls[i], "n/a");
+	}
 
 	SendMessage(hProgress, PBM_SETPOS, 0, (LPARAM)0);
 
@@ -175,287 +182,108 @@ void ResetCounters(void)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool PerformWriteTests(const char* sDrive, int iBufferSize, int iRuns, int iRounds, bool bUseWriteCache)
+void ShowConfiguration(const BENCHCONFIG* pConfig)
 {
-	ResetCounters();
-
-	SetThreadAffinityMask(GetCurrentThread(), 0);
-
-	HighPrecisionTimer timer;
-
-	char* sBuf = NULL;
-	char sFileName[MAX_PATH];
 	char sTemp[1024];
-	char sTemp2[1024];
 
-	double dTotalMBPerSecond = 0;
-	double dMBPerSecond = 0;
-	double dDuration = 0;
-	double dTotalDuration = 0;
-	double dAverageMBPerSecond = 0;
+	Set_Text(hDriveInfo, pConfig->Drive);
+	Set_Text(hAllowCache, pConfig->AllowWriteCache ? "Allowed (flush timed)" : "Off (write-through)");
 
-	double dMaxMBPS = -999999999999999;
-	double dMinMBPS = 999999999999999;
-
-	DWORD dwWritten = 0;
-
-	HANDLE hFile = NULL;
-
-	int iBufSz = 0;
-
-	srand(GetTickCount());
-
-	//-------------------------------------------------------------------------------------------------------------
-
-	if (bUseWriteCache)
-	{
-		strcpy_s(sTemp, sizeof(sTemp), "Yes");
-	}
-	else {
-		strcpy_s(sTemp, sizeof(sTemp), "No");
-	}
-	Set_Text(hAllowCache, sTemp);
-
-	FormatInteger(sTemp, sizeof(sTemp), iRounds);
-	Set_Text(hIOS, sTemp);
-
-	FormatInteger(sTemp, sizeof(sTemp), iRuns);
+	FormatInteger(sTemp, sizeof(sTemp), pConfig->Runs);
 	Set_Text(hIterations, sTemp);
 
-	FileSizeFriendly(iBufferSize, sTemp, sizeof(sTemp));
+	FormatInteger(sTemp, sizeof(sTemp), pConfig->BlocksPerRun);
+	Set_Text(hIOS, sTemp);
+
+	FileSizeFriendly((__int64)pConfig->BlockSize, sTemp, sizeof(sTemp));
 	Set_Text(hChunkSize, sTemp);
 
-	FileSizeFriendly(((__int64)iBufferSize * ((__int64)iRounds)), sTemp, sizeof(sTemp));
+	FileSizeFriendly((__int64)pConfig->BlockSize * (__int64)pConfig->BlocksPerRun, sTemp, sizeof(sTemp));
 	Set_Text(hBytesPerIteration, sTemp);
 
-	FileSizeFriendly(((__int64)iBufferSize * ((__int64)iRounds) * ((__int64)iRuns)), sTemp, sizeof(sTemp));
+	//Each phase moves the data set once.
+	FileSizeFriendly((__int64)pConfig->BlockSize * (__int64)pConfig->BlocksPerRun * (__int64)pConfig->Runs, sTemp, sizeof(sTemp));
 	Set_Text(hTotalDatasetSize, sTemp);
+}
 
-	SendMessage(hProgress, PBM_SETRANGE32, 0, (LPARAM)iRuns * 2);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//-------------------------------------------------------------------------------------------------------------
+void ShowStats(const BENCHSTATS* pStats)
+{
+	bool bWrite = (pStats->Phase == BenchPhaseWrite);
+	char sTemp[128];
 
-	//Allocate and fill the random buffer.
-	sBuf = (char*)gMem.Allocate(sizeof(char), iBufferSize + 1);
-	for (int i = 0; i < iBufferSize; i++)
+	FormatRate(pStats->AvgMBps, sTemp, sizeof(sTemp));
+	Set_Text(bWrite ? hWriteAvg : hReadAvg, sTemp);
+
+	FormatRate(pStats->LastMBps, sTemp, sizeof(sTemp));
+	Set_Text(bWrite ? hWriteLast : hReadLast, sTemp);
+
+	FormatRate(pStats->MinMBps, sTemp, sizeof(sTemp));
+	Set_Text(bWrite ? hWriteMin : hReadMin, sTemp);
+
+	FormatRate(pStats->MaxMBps, sTemp, sizeof(sTemp));
+	Set_Text(bWrite ? hWriteMax : hReadMax, sTemp);
+
+	sprintf_s(sTemp, sizeof(sTemp), "%.0f", pStats->Iops);
+	Set_Text(bWrite ? hWriteIops : hReadIops, sTemp);
+
+	FormatLatency(pStats->AvgLatencyMs, sTemp, sizeof(sTemp));
+	Set_Text(bWrite ? hWriteLatency : hReadLatency, sTemp);
+
+	sprintf_s(sTemp, sizeof(sTemp), "%.2f s", pStats->TotalSeconds);
+	Set_Text(bWrite ? hWriteDiskTime : hReadDiskTime, sTemp);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BenchProgress(void* pContext, BenchEvent eEvent, const BENCHSTATS* pStats, int iStep, int iTotalSteps)
+{
+	bool bWrite = (pStats->Phase == BenchPhaseWrite);
+	char sTemp[256];
+
+	if (eEvent == BenchEventPhaseStart)
 	{
-		sBuf[i] = (char)rand();
+		sprintf_s(sTemp, sizeof(sTemp), "%s test: starting...", bWrite ? "Write" : "Read");
+		Set_Text(hStatus, sTemp);
+		return;
 	}
 
-	sprintf_s(sFileName, sizeof(sFileName),
-		"%s\\%d-%d-%d-%d.txt",
-		sDrive, iRuns, iRounds, iBufferSize, GetTickCount());
-	CorrectReversePath(sFileName, sizeof(sFileName));
-
-	DWORD dwWriteFlags = 0;
-
-	if (!gbUseWriteCache)
+	if (bWrite)
 	{
-		dwWriteFlags = FILE_FLAG_WRITE_THROUGH | FILE_FLAG_NO_BUFFERING;
+		gWriteStats = *pStats;
+		gbHaveWriteStats = true;
+	}
+	else {
+		gReadStats = *pStats;
+		gbHaveReadStats = true;
 	}
 
-	hFile = CreateFile(
-		sFileName,
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CREATE_ALWAYS,
-		dwWriteFlags,
-		NULL
-	);
+	ShowStats(pStats);
 
-	if (hFile == INVALID_HANDLE_VALUE)
+	double dValues[4];
+	dValues[0] = pStats->MinMBps;
+	dValues[1] = pStats->MaxMBps;
+	dValues[2] = pStats->AvgMBps;
+	dValues[3] = pStats->LastMBps;
+
+	CGraph* pGraph = bWrite ? pWriteGraph : pReadGraph;
+	//The graph advances one pixel per update. Repeat each run so short tests still span the plot as a step chart.
+	int iPixelsPerRun = pGraph->Width() / (gBenchConfig.Runs > 0 ? gBenchConfig.Runs : 1);
+	if (iPixelsPerRun < 1)
 	{
-		sprintf_s(sTemp, sizeof(sTemp), "Failed to create temporary write buffering file on the specified volume.\r\n\"%s\"", sFileName);
-		MessageBox(hMainDialog, sTemp, gsTitleCaption, MB_ICONERROR);
-		gMem.Free(sBuf);
-		return false;
+		iPixelsPerRun = 1;
 	}
-
-	for (int iRun = 0; iRun < iRuns * 2; iRun++)
+	for (int i = 0; i < iPixelsPerRun; i++)
 	{
-		if (iRun == iRuns)
-		{
-			dTotalMBPerSecond = 0;
-			dMBPerSecond = 0;
-			dDuration = 0;
-			dTotalDuration = 0;
-			dAverageMBPerSecond = 0;
-
-			dMaxMBPS = -999999999999999;
-			dMinMBPS = 999999999999999;
-
-			CloseHandle(hFile);
-
-			DWORD dwReadFlags = 0;
-
-			if (!gbUseWriteCache)
-			{
-				dwReadFlags = FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH;
-			}
-
-			hFile = CreateFile(
-				sFileName,
-				GENERIC_READ,
-				0,
-				NULL,
-				OPEN_EXISTING,
-				dwReadFlags,
-				NULL
-			);
-
-			if (hFile == INVALID_HANDLE_VALUE)
-			{
-				sprintf_s(sTemp, sizeof(sTemp), "Failed to create temporary read buffering file on the specified volume. \r\n\"%s\"", sFileName);
-				MessageBox(hMainDialog, sTemp, gsTitleCaption, MB_ICONERROR);
-				gMem.Free(sBuf);
-				return false;
-			}
-		}
-
-		FileSeek(hFile, 0, FILE_BEGIN);
-
-		timer.Start();
-		for (int iRound = 0; iRound < iRounds; iRound++)
-		{
-			if (iRun < iRuns)
-			{
-				if (!WriteFile(hFile, sBuf, iBufferSize, &dwWritten, NULL))
-				{
-					MessageBox(hMainDialog, "Failed to [write] the file buffer."
-						" Access was denied or the buffer is not sector aligned.", gsTitleCaption, MB_ICONERROR);
-					gbCancel = true;
-				}
-			}
-			else {
-				if (!ReadFile(hFile, sBuf, iBufferSize, &dwWritten, NULL))
-				{
-					MessageBox(hMainDialog, "Failed to [read] the file buffer."
-						" Access was denied or the buffer is not sector aligned.", gsTitleCaption, MB_ICONERROR);
-					gbCancel = true;
-				}
-			}
-
-			if (gbCancel)
-			{
-				break;
-			}
-		}
-		timer.Stop();
-
-		dDuration = timer.Calculate() / 1000.0; // Duration of last write operation.
-
-		if (dDuration <= 0)
-		{
-			MessageBox(hMainDialog,
-				"The selected disk completed the write operation to quickly for measurement."
-				" Try increasing some of the stress values for a more accurate test.",
-				gsTitleCaption, MB_ICONINFORMATION);
-
-			gbCancel = true;
-		}
-
-		if (!gbCancel)
-		{
-			int iRunAvg = iRun;
-
-			if (iRun >= iRuns)
-			{
-				iRunAvg -= iRuns;
-			}
-
-			dTotalDuration = (dTotalDuration + dDuration); //Total Disk Time.
-			dMBPerSecond = (((__int64)iBufferSize * (__int64)iRounds) / dDuration); //Last MB/s.
-			dTotalMBPerSecond += dMBPerSecond / 1024.0; //Sum of all MB/s calculations. Used for averages.
-			dAverageMBPerSecond = (dTotalMBPerSecond / ((double)(iRunAvg + 1))) * 1024.0; //Average MB/s.
-
-			if (dMBPerSecond > dMaxMBPS)
-			{
-				dMaxMBPS = dMBPerSecond;
-			}
-
-			if (dMBPerSecond < dMinMBPS)
-			{
-				dMinMBPS = dMBPerSecond;
-			}
-
-			double dValues[4];
-			dValues[0] = dMinMBPS;
-			dValues[1] = dMaxMBPS;
-			dValues[2] = dAverageMBPerSecond;
-			dValues[3] = dMBPerSecond;
-
-			if (iRun < iRuns)
-			{
-				pWriteGraph->Update(dValues);
-				pWriteGraph->Invalidate();
-
-				FormatDouble(sTemp, sizeof(sTemp), dTotalDuration, 2);
-				sprintf_s(sTemp2, sizeof(sTemp2), " %ss", sTemp);
-				Set_Text(hWriteDiskTime, sTemp2);
-
-				FileSizeFriendly((__int64)dMBPerSecond, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hWriteLast, sTemp2);
-
-				FileSizeFriendly((__int64)dAverageMBPerSecond, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hWriteAvg, sTemp2);
-
-				FileSizeFriendly((__int64)dMinMBPS, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hWriteMin, sTemp2);
-
-				FileSizeFriendly((__int64)dMaxMBPS, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hWriteMax, sTemp2);
-			}
-			else {
-				pReadGraph->Update(dValues);
-				pReadGraph->Invalidate();
-
-				FormatDouble(sTemp, sizeof(sTemp), dTotalDuration, 2);
-				sprintf_s(sTemp2, sizeof(sTemp2), " %ss", sTemp);
-				Set_Text(hReadDiskTime, sTemp2);
-
-				FileSizeFriendly((__int64)dMBPerSecond, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hReadLast, sTemp2);
-
-				FileSizeFriendly((__int64)dAverageMBPerSecond, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hReadAvg, sTemp2);
-
-				FileSizeFriendly((__int64)dMinMBPS, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hReadMin, sTemp2);
-
-				FileSizeFriendly((__int64)dMaxMBPS, sTemp, sizeof(sTemp));
-				sprintf_s(sTemp2, sizeof(sTemp2), " %s/s", sTemp);
-				Set_Text(hReadMax, sTemp2);
-			}
-
-			SendMessage(hProgress, PBM_SETPOS, iRun, (LPARAM)0);
-		}
-		else {
-			break;
-		}
+		pGraph->Update(dValues);
 	}
+	pGraph->Invalidate();
 
-	SendMessage(hProgress, PBM_SETPOS, iRuns * 2, (LPARAM)0);
+	sprintf_s(sTemp, sizeof(sTemp), "%s test: run %d of %d", bWrite ? "Write" : "Read", pStats->RunsCompleted, gBenchConfig.Runs);
+	Set_Text(hStatus, sTemp);
 
-	CloseHandle(hFile);
-	DeleteFile(sFileName);
-
-	gMem.Free(sBuf);
-
-	if (gbCancel)
-	{
-		MessageBox(hMainDialog, "Cancelled.", gsTitleCaption, MB_ICONINFORMATION);
-		return false;
-	}
-
-	return true;
+	SendMessage(hProgress, PBM_SETPOS, iStep, (LPARAM)0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -467,15 +295,49 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 	SendMessage(hMainDialog, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)sCaption);
 
 	Set_Text(GetDlgItem(hMainDialog, ID_CMDMULTI), "Cancel");
+	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDCOPY), FALSE);
 
-	if (PerformWriteTests(gsDrive, giBufferSize, giRuns, giRounds, gbUseWriteCache))
+	memset(&gBenchConfig, 0, sizeof(gBenchConfig));
+	strcpy_s(gBenchConfig.Drive, sizeof(gBenchConfig.Drive), gsDrive);
+	gBenchConfig.BlockSize = (DWORD)giBufferSize;
+	gBenchConfig.BlocksPerRun = giRounds;
+	gBenchConfig.Runs = giRuns;
+	gBenchConfig.AllowWriteCache = gbUseWriteCache;
+
+	gbHaveWriteStats = false;
+	gbHaveReadStats = false;
+
+	ResetCounters();
+	ShowConfiguration(&gBenchConfig);
+
+	SendMessage(hProgress, PBM_SETRANGE32, 0, (LPARAM)giRuns * 2);
+
+	char sError[1024];
+	BenchResult eResult = RunDiskBench(&gBenchConfig, &gbCancel, BenchProgress, NULL, sError, sizeof(sError));
+
+	if (eResult == BenchOk)
 	{
-		MessageBox(hMainDialog, "Complete!", gsTitleCaption, MB_ICONINFORMATION);
+		char sTemp[256];
+		sprintf_s(sTemp, sizeof(sTemp), "Complete. Write %.1f MB/s, Read %.1f MB/s (averages).",
+			gWriteStats.AvgMBps, gReadStats.AvgMBps);
+		Set_Text(hStatus, sTemp);
+		SendMessage(hProgress, PBM_SETPOS, giRuns * 2, (LPARAM)0);
 	}
+	else if (eResult == BenchCancelled)
+	{
+		Set_Text(hStatus, "Cancelled.");
+	}
+	else {
+		Set_Text(hStatus, "Failed.");
+		MessageBox(hMainDialog, sError, gsTitleCaption, MB_ICONERROR);
+	}
+
+	SendMessage(hMainDialog, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)gsTitleCaption);
 
 	gbCancel = false;
 	Set_Text(GetDlgItem(hMainDialog, ID_CMDMULTI), "Run");
 	EnableWindow(GetDlgItem(hMainDialog, ID_CMDMULTI), TRUE);
+	EnableWindow(GetDlgItem(hMainDialog, IDC_CMDCOPY), gbHaveWriteStats || gbHaveReadStats);
 
 	CloseHandle(hThread);
 	hThread = NULL;
@@ -485,10 +347,72 @@ DWORD WINAPI ThreadProc(LPVOID lpVoid)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void CopyResultsToClipboard(HWND hWnd)
+{
+	char sReport[4096];
+	char sBlock[64];
+	char sRate[64];
+	char sLatency[64];
+
+	FileSizeFriendly((__int64)gBenchConfig.BlockSize, sBlock, sizeof(sBlock));
+
+	int iLen = sprintf_s(sReport, sizeof(sReport),
+		"%s %s\r\n"
+		"Drive: %s   Block size: %s   Blocks per run: %d   Runs: %d   Write cache: %s\r\n",
+		gsTitleCaption, gsFileVersion, gBenchConfig.Drive, sBlock, gBenchConfig.BlocksPerRun, gBenchConfig.Runs,
+		gBenchConfig.AllowWriteCache ? "allowed" : "off");
+
+	const BENCHSTATS* pStats[2] = { &gWriteStats, &gReadStats };
+	const bool bHave[2] = { gbHaveWriteStats, gbHaveReadStats };
+	const char* sPhase[2] = { "Write", "Read " };
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (!bHave[i])
+		{
+			continue;
+		}
+
+		FormatLatency(pStats[i]->AvgLatencyMs, sLatency, sizeof(sLatency));
+		FormatRate(pStats[i]->AvgMBps, sRate, sizeof(sRate));
+
+		iLen += sprintf_s(sReport + iLen, sizeof(sReport) - iLen,
+			"%s: avg %s, last %.1f, min %.1f, max %.1f MB/s, %.0f IOPS, %s latency, %d runs\r\n",
+			sPhase[i], sRate, pStats[i]->LastMBps, pStats[i]->MinMBps, pStats[i]->MaxMBps,
+			pStats[i]->Iops, sLatency, pStats[i]->RunsCompleted);
+	}
+
+	if (OpenClipboard(hWnd))
+	{
+		EmptyClipboard();
+
+		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, strlen(sReport) + 1);
+		if (hMem)
+		{
+			memcpy(GlobalLock(hMem), sReport, strlen(sReport) + 1);
+			GlobalUnlock(hMem);
+			SetClipboardData(CF_TEXT, hMem);
+		}
+
+		CloseClipboard();
+		Set_Text(hStatus, "Results copied to the clipboard.");
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void PromptAndStart(HWND hWnd)
+{
+	if (DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_CONFIG), hWnd, ConfigDialog) == 100)
+	{
+		hThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)0, 0, &dwThreadID);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static bool bFirstPaint = true;
-
 	//--------------------------------------------------------------------------
 
 	if (uMsg == WM_INITDIALOG)
@@ -502,6 +426,7 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hWnd, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)gsTitleCaption);
 		SendMessage(hWnd, WM_SETICON, TRUE, (LPARAM)LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN)));
 
+		hDriveInfo = GetDlgItem(hWnd, IDC_DRIVEINFO);
 		hAllowCache = GetDlgItem(hWnd, IDC_ALLOWCACHE);
 		hIOS = GetDlgItem(hWnd, IDC_IOS);
 		hIterations = GetDlgItem(hWnd, IDC_ITERATIONS);
@@ -509,6 +434,7 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hBytesPerIteration = GetDlgItem(hWnd, IDC_BYTESPERITERATION);
 		hTotalDatasetSize = GetDlgItem(hWnd, IDC_TOTALDATASETSIZE);
 		hProgress = GetDlgItem(hWnd, IDC_DSKPROGRESS);
+		hStatus = GetDlgItem(hWnd, IDC_STATUS);
 
 		hWriteGraph = GetDlgItem(hWnd, IDC_GRAPHWRITE);
 		hWriteDiskTime = GetDlgItem(hWnd, IDC_DISKTIMEWRITE);
@@ -516,6 +442,8 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hWriteAvg = GetDlgItem(hWnd, IDC_AVGWRITE);
 		hWriteMin = GetDlgItem(hWnd, IDC_MINWRITE);
 		hWriteMax = GetDlgItem(hWnd, IDC_MAXWRITE);
+		hWriteIops = GetDlgItem(hWnd, IDC_IOPSWRITE);
+		hWriteLatency = GetDlgItem(hWnd, IDC_LATWRITE);
 
 		hReadGraph = GetDlgItem(hWnd, IDC_GRAPHREAD);
 		hReadDiskTime = GetDlgItem(hWnd, IDC_DISKTIMEREAD);
@@ -523,99 +451,101 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hReadAvg = GetDlgItem(hWnd, IDC_AVGREAD);
 		hReadMin = GetDlgItem(hWnd, IDC_MINREAD);
 		hReadMax = GetDlgItem(hWnd, IDC_MAXREAD);
+		hReadIops = GetDlgItem(hWnd, IDC_IOPSREAD);
+		hReadLatency = GetDlgItem(hWnd, IDC_LATREAD);
 
-		pWriteGraph = new CGraph(hWriteGraph, RGB(0, 0, 0), RGB(0, 100, 0), 15, GRAPH_LEFT, true);
-		pWriteGraph->SpacingTop(50);
+		//Large font for the headline throughput figures.
+		HDC hDC = GetDC(hWnd);
+		int iDpi = GetDeviceCaps(hDC, LOGPIXELSY);
+		ReleaseDC(hWnd, hDC);
 
-		pWriteGraph->AddSeries(RGB(255, 0, 0), 1024.0, GraphTextFormatCallback);
-		pWriteGraph->AddSeries(RGB(0, 255, 0), 1024.0, GraphTextFormatCallback);
-		pWriteGraph->AddSeries(RGB(200, 200, 200), 1024.0, GraphTextFormatCallback);
-		pWriteGraph->AddSeries(RGB(255, 255, 0), 1024.0, GraphTextFormatCallback);
+		ghBigFont = CreateFont(-MulDiv(16, iDpi, 72), 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, ANSI_CHARSET,
+			OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FF_DONTCARE, "Segoe UI");
+		SendMessage(hWriteAvg, WM_SETFONT, (WPARAM)ghBigFont, TRUE);
+		SendMessage(hReadAvg, WM_SETFONT, (WPARAM)ghBigFont, TRUE);
 
-		pReadGraph = new CGraph(hReadGraph, RGB(0, 0, 0), RGB(0, 100, 0), 15, GRAPH_LEFT, true);
-		pReadGraph->SpacingTop(50);
+		int iGridSpacing = MulDiv(20, iDpi, 96);
 
-		pReadGraph->AddSeries(RGB(255, 0, 0), 1024.0, GraphTextFormatCallback);
-		pReadGraph->AddSeries(RGB(0, 255, 0), 1024.0, GraphTextFormatCallback);
-		pReadGraph->AddSeries(RGB(200, 200, 200), 1024.0, GraphTextFormatCallback);
-		pReadGraph->AddSeries(RGB(255, 255, 0), 1024.0, GraphTextFormatCallback);
+		pWriteGraph = new CGraph(hWriteGraph, RGB(24, 27, 33), RGB(44, 50, 60), iGridSpacing, GRAPH_LEFT, true);
+		pWriteGraph->SpacingTop(MulDiv(28, iDpi, 96));
+		pWriteGraph->AddSeries(GRAPH_COLOR_MIN, 10.0, GraphTextFormatCallback);
+		pWriteGraph->AddSeries(GRAPH_COLOR_MAX, 10.0, GraphTextFormatCallback);
+		pWriteGraph->AddSeries(GRAPH_COLOR_AVG, 10.0, GraphTextFormatCallback);
+		pWriteGraph->AddSeries(GRAPH_COLOR_LAST, 10.0, GraphTextFormatCallback);
+
+		pReadGraph = new CGraph(hReadGraph, RGB(24, 27, 33), RGB(44, 50, 60), iGridSpacing, GRAPH_LEFT, true);
+		pReadGraph->SpacingTop(MulDiv(28, iDpi, 96));
+		pReadGraph->AddSeries(GRAPH_COLOR_MIN, 10.0, GraphTextFormatCallback);
+		pReadGraph->AddSeries(GRAPH_COLOR_MAX, 10.0, GraphTextFormatCallback);
+		pReadGraph->AddSeries(GRAPH_COLOR_AVG, 10.0, GraphTextFormatCallback);
+		pReadGraph->AddSeries(GRAPH_COLOR_LAST, 10.0, GraphTextFormatCallback);
 
 		ResetCounters();
+		Set_Text(hDriveInfo, "n/a");
+		Set_Text(hAllowCache, "n/a");
+		Set_Text(hIOS, "n/a");
+		Set_Text(hIterations, "n/a");
+		Set_Text(hChunkSize, "n/a");
+		Set_Text(hBytesPerIteration, "n/a");
+		Set_Text(hTotalDatasetSize, "n/a");
+		Set_Text(hStatus, "Ready.");
+		EnableWindow(GetDlgItem(hWnd, IDC_CMDCOPY), FALSE);
 
 		CenterWindow(hWnd);
+
+		//Show the window first, then ask for the settings.
+		PostMessage(hWnd, WM_APP_SHOWCONFIG, 0, 0);
 
 		return TRUE; // Return TRUE to set the keyboard focus, Otherwise return FALSE.
 	}
 
 	//--------------------------------------------------------------------------
 
-	if (uMsg == WM_COMMAND)
+	if (uMsg == WM_APP_SHOWCONFIG)
 	{
-		if (wParam == ID_CMDMULTI) //- Cancel Button.
-		{
-			char sCaption[100];
-			Get_Text(GetDlgItem(hWnd, ID_CMDMULTI), sCaption, sizeof(sCaption));
-			if (_strcmpi(sCaption, "Run") == 0)
-			{
-				if (DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_CONFIG), hWnd, ConfigDialog) == 100)
-				{
-					hThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)0, 0, &dwThreadID);
-				}
-				return true;
-			}
-			else {
-				if (MessageBox(hMainDialog, "Are you sure you want to cancel the operation?", gsTitleCaption, MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) == IDYES)
-				{
-					if (hThread)
-					{
-						gbCancel = true;
-						EnableWindow(GetDlgItem(hMainDialog, ID_CMDMULTI), FALSE);
-					}
-					return TRUE;
-				}
-			}
-		}
-		else if (wParam == IDC_CMDHELP) //- Ok Button.
-		{
-			OpenHelp(hWnd);
-			return TRUE;
-		}
-		else if (wParam == IDC_ONTOP)
-		{
-			if (IsDlgButtonChecked(hWnd, IDC_ONTOP))
-			{
-				SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-			}
-			else {
-				SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-			}
-		}
-
-		return FALSE;
+		ShowWindow(hWnd, SW_SHOW);
+		UpdateWindow(hWnd);
+		PromptAndStart(hWnd);
+		return TRUE;
 	}
 
 	//--------------------------------------------------------------------------
 
-	if (uMsg == WM_PAINT)
+	if (uMsg == WM_COMMAND)
 	{
-		if (bFirstPaint)
+		if (LOWORD(wParam) == ID_CMDMULTI) //- Run / Cancel Button.
 		{
-			bFirstPaint = false;
-			if (DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_CONFIG), hWnd, ConfigDialog) == 100)
+			if (!hThread)
 			{
-				hThread = CreateThread(NULL, 0, ThreadProc, (LPVOID)0, 0, &dwThreadID);
+				PromptAndStart(hWnd);
 			}
+			else if (MessageBox(hMainDialog, "Are you sure you want to cancel the operation?", gsTitleCaption, MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) == IDYES)
+			{
+				if (hThread)
+				{
+					gbCancel = true;
+					EnableWindow(GetDlgItem(hMainDialog, ID_CMDMULTI), FALSE);
+				}
+			}
+			return TRUE;
+		}
+		else if (LOWORD(wParam) == IDC_CMDHELP)
+		{
+			OpenHelp(hWnd);
+			return TRUE;
+		}
+		else if (LOWORD(wParam) == IDC_CMDCOPY)
+		{
+			CopyResultsToClipboard(hWnd);
+			return TRUE;
+		}
+		else if (LOWORD(wParam) == IDC_ONTOP)
+		{
+			SetWindowPos(hWnd, IsDlgButtonChecked(hWnd, IDC_ONTOP) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			return TRUE;
 		}
 
-		HDC ThisHDC;
-		PAINTSTRUCT ThisPS;
-
-		ThisHDC = BeginPaint(hWnd, &ThisPS);
-
-		//- Any painting should be done here.
-
-		EndPaint(hWnd, &ThisPS);
-		return TRUE;
+		return FALSE;
 	}
 
 	//--------------------------------------------------------------------------
@@ -653,13 +583,16 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			delete pWriteGraph;
 			delete pReadGraph;
 
+			if (ghBigFont)
+			{
+				DeleteObject(ghBigFont);
+				ghBigFont = NULL;
+			}
+
 			EndDialog(hWnd, 0);
-			DestroyWindow(hWnd);
 
 			hMainDialog = NULL;
-			return true;
 		}
-
 
 		return TRUE;
 	}
@@ -671,4 +604,3 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-

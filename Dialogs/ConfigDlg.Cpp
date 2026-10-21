@@ -110,23 +110,15 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		AppendMenu(SystemMenu_hMenu, MF_SEPARATOR, 0, 0);
 		AppendMenu(SystemMenu_hMenu, MF_STRING, CONFIGMENU_MENU_ABOUT, "About");
 
-		SendMessage(hWnd, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)gsTitleCaption);
+		char sCaption[128];
+		sprintf_s(sCaption, sizeof(sCaption), "%s - Benchmark Settings", gsTitleCaption);
+		SendMessage(hWnd, (UINT)WM_SETTEXT, (WPARAM)0, (LPARAM)sCaption);
 		SendMessage(hWnd, WM_SETICON, TRUE, (LPARAM)LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN)));
 
 		hDiskDrive = GetDlgItem(hWnd, IDC_DISKDRIVE);
 		hChunkSize = GetDlgItem(hWnd, IDC_CHUNKSIZE);
 		hIOS = GetDlgItem(hWnd, IDC_IOS);
 		hIterations = GetDlgItem(hWnd, IDC_ITERATIONS);
-
-		SetWindowPos(
-			hDiskDrive,				// Handle of window.
-			NULL,					// Placement-order handle.
-			0,						// Horizontal position.
-			0,						// Vertical position.
-			158,					// Width.
-			100,					// Height.
-			SWP_NOMOVE | SWP_NOZORDER // Window-positioning flags.
-		);
 
 		PopDiskInformation(hDiskDrive);
 
@@ -165,124 +157,83 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				return true;
 			}
 
-			if (SendMessage(hDiskDrive, (UINT)CB_FINDSTRING, (WPARAM)0, (LPARAM)gsDrive) != CB_ERR)
+			if (!isalpha((unsigned char)gsDrive[0]))
 			{
-				gsDrive[3] = '\0';
+				MessageBox(hWnd, "You must select a drive to test.", gsTitleCaption, MB_ICONINFORMATION);
+				return true;
 			}
 
-			if (gsDrive[1] != ':')
-			{
-				gsDrive[1] = ':';
-			}
-			if (gsDrive[2] != '\\')
-			{
-				gsDrive[2] = '\\';
-			}
+			// Reduce "C:\ (Fixed Disk)" (or anything typed) to the drive root.
+			gsDrive[1] = ':';
+			gsDrive[2] = '\\';
+			gsDrive[3] = '\0';
 
 			CMathParser mathParser;
-			StringBuilder errorText;
 
 			gbUseWriteCache = (IsDlgButtonChecked(hWnd, IDC_ALLOWCACHING) == BST_CHECKED);
 
-			int iRegValueSz = 0;
-			iRegValueSz = Get_Text(hChunkSize, gsLastChunkSize, sizeof(gsLastChunkSize));
-			if (iRegValueSz > 0 || iRegValueSz < sizeof(gsLastChunkSize))
+			struct { HWND hEdit; char* sText; int iTextSz; int* piValue; const char* sName; } fields[3] = {
+				{ hChunkSize, gsLastChunkSize, (int)sizeof(gsLastChunkSize), &giBufferSize, "Block size" },
+				{ hIOS, gsLastIOS, (int)sizeof(gsLastIOS), &giRounds, "Blocks per run" },
+				{ hIterations, gsLastIterations, (int)sizeof(gsLastIterations), &giRuns, "Runs" }
+			};
+
+			for (int i = 0; i < 3; i++)
 			{
-				MEMORYSTATUSEX ms;
-				memset(&ms, 0, sizeof(ms));
-				ms.dwLength = sizeof(ms);
-				GlobalMemoryStatusEx(&ms);
-
-				if (!mathParser.Calculate(gsLastChunkSize, &giBufferSize) == CMathParser::ResultOk)
+				if (Get_Text(fields[i].hEdit, fields[i].sText, fields[i].iTextSz) <= 0)
 				{
-					errorText.Append("An error occurred parsing the \"Buffer Size\": ");
-					errorText.Append(mathParser.LastError()->Text);
-					MessageBox(hWnd, errorText.Buffer, gsTitleCaption, MB_ICONINFORMATION);
-					return false;
-				}
-
-				if (giBufferSize < 1)
-				{
-					MessageBox(hWnd, "The \"Buffer Size\" must be greater than zero.", gsTitleCaption, MB_ICONINFORMATION);
-					return true;
-				}
-				else if (giBufferSize > (ms.ullTotalPhys / 4))
-				{
-					char sSize[64];
-					sprintf_s(sText, "The \"Buffer Size\" cannot exceed 1/4th of physical RAM (%s)",
-						FileSizeFriendly((ms.ullTotalPhys / 4), sSize, sizeof(sSize)));
+					sprintf_s(sText, sizeof(sText), "You must enter a value for \"%s\".", fields[i].sName);
 					MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
 					return true;
 				}
 
-				if (!gbUseWriteCache)
+				if (mathParser.Calculate(fields[i].sText, fields[i].piValue) != CMathParser::ResultOk)
 				{
-					int iSectorAligned = SectorAlign(gsDrive, giBufferSize);
-					if (iSectorAligned <= 0)
-					{
-						MessageBox(hWnd,
-							"Failed to sector align the disk buffer. See your hardware documentation for proper sector sizes or enable disk caching.",
-							gsTitleCaption, MB_ICONINFORMATION);
-						return true;
-					}
-
-					giBufferSize = iSectorAligned;
-				}
-
-				Set_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "BufferSize", gsLastChunkSize);
-			}
-			else {
-				MessageBox(hWnd, "You must enter a \"Buffer Size\".", gsTitleCaption, MB_ICONINFORMATION);
-				return true;
-			}
-
-			iRegValueSz = Get_Text(hIterations, gsLastIterations, sizeof(gsLastIterations));
-			if (iRegValueSz > 0 || iRegValueSz < sizeof(gsLastIterations))
-			{
-				if (!mathParser.Calculate(gsLastIterations, &giRuns) == CMathParser::ResultOk)
-				{
-					errorText.Append("An error occurred parsing the \"Buffer Size\": ");
-					errorText.Append(mathParser.LastError()->Text);
-					MessageBox(hWnd, errorText.Buffer, gsTitleCaption, MB_ICONINFORMATION);
-					return false;
-				}
-
-				if (giRuns < 1 || giRuns > 10000)
-				{
-					MessageBox(hWnd, "\"Runs\" must be between 1 and 10,000.", gsTitleCaption, MB_ICONINFORMATION);
+					sprintf_s(sText, sizeof(sText), "An error occurred parsing \"%s\": %s", fields[i].sName, mathParser.LastError()->Text);
+					MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
 					return true;
 				}
-
-				Set_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "Runs", gsLastIterations);
-			}
-			else {
-				MessageBox(hWnd, "You must enter a number of \"Runs\".", gsTitleCaption, MB_ICONINFORMATION);
-				return true;
 			}
 
-			iRegValueSz = Get_Text(hIOS, gsLastIOS, sizeof(gsLastIOS));
-			if (iRegValueSz > 0 || iRegValueSz < sizeof(gsLastIOS))
+			MEMORYSTATUSEX ms;
+			memset(&ms, 0, sizeof(ms));
+			ms.dwLength = sizeof(ms);
+			GlobalMemoryStatusEx(&ms);
+
+			if (giBufferSize < 1)
 			{
-				if (!mathParser.Calculate(gsLastIOS, &giRounds) == CMathParser::ResultOk)
-				{
-					errorText.Append("An error occurred parsing the \"Buffer Size\": ");
-					errorText.Append(mathParser.LastError()->Text);
-					MessageBox(hWnd, errorText.Buffer, gsTitleCaption, MB_ICONINFORMATION);
-					return false;
-				}
-
-				if (giRounds < 1 || giRounds > 10000)
-				{
-					MessageBox(hWnd, "The \"Rounds\" must be between 1 and 10,000.", gsTitleCaption, MB_ICONINFORMATION);
-					return true;
-				}
-
-				Set_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "Rounds", gsLastIOS);
-			}
-			else {
-				MessageBox(hWnd, "You must enter a number of \"Rounds\".", gsTitleCaption, MB_ICONINFORMATION);
+				MessageBox(hWnd, "The \"Block size\" must be greater than zero.", gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
+			else if ((unsigned __int64)giBufferSize > (ms.ullTotalPhys / 4))
+			{
+				char sSize[64];
+				sprintf_s(sText, "The \"Block size\" cannot exceed 1/4th of physical RAM (%s)",
+					FileSizeFriendly((__int64)(ms.ullTotalPhys / 4), sSize, sizeof(sSize)));
+				MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
+				return true;
+			}
+
+			if (giRounds < 1 || giRounds > 100000)
+			{
+				MessageBox(hWnd, "\"Blocks per run\" must be between 1 and 100,000.", gsTitleCaption, MB_ICONINFORMATION);
+				return true;
+			}
+
+			if (giRuns < 1 || giRuns > 10000)
+			{
+				MessageBox(hWnd, "\"Runs\" must be between 1 and 10,000.", gsTitleCaption, MB_ICONINFORMATION);
+				return true;
+			}
+
+			// Reads are always unbuffered, so the block size must always be a sector multiple.
+			int iSectorAligned = SectorAlign(gsDrive, giBufferSize);
+			if (iSectorAligned <= 0)
+			{
+				MessageBox(hWnd, "Failed to determine the sector size of the selected volume.", gsTitleCaption, MB_ICONINFORMATION);
+				return true;
+			}
+			giBufferSize = iSectorAligned;
 
 			char sVolumeNameBuffer[1024];
 			DWORD dwFileSystemFlags;
@@ -297,7 +248,6 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				sFileSystemNameBuffer,
 				sizeof(sFileSystemNameBuffer)))
 			{
-
 				if (dwFileSystemFlags & FILE_READ_ONLY_VOLUME)
 				{
 					MessageBox(hWnd, "The selected volume is read-only.", gsTitleCaption, MB_ICONINFORMATION);
@@ -307,14 +257,13 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				ULARGE_INTEGER FreeBytesAvailable;
 				if (GetDiskFreeSpaceEx(gsDrive, &FreeBytesAvailable, NULL, NULL))
 				{
-					unsigned __int64 i64BufferSize = giBufferSize;
-					unsigned __int64 i64Rounds = giRounds;
+					unsigned __int64 i64FileSize = (unsigned __int64)giBufferSize * (unsigned __int64)giRounds;
 
-					if ((i64BufferSize * i64Rounds) >= FreeBytesAvailable.QuadPart)
+					if (i64FileSize >= FreeBytesAvailable.QuadPart)
 					{
 						char sSize[64];
 						sprintf_s(sText, "The selected volume has insufficient disk space to support the test file: (%s).",
-							FileSizeFriendly(giBufferSize * giRounds, sSize, sizeof(sSize)));
+							FileSizeFriendly((__int64)i64FileSize, sSize, sizeof(sSize)));
 						MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
 						return true;
 					}
@@ -326,13 +275,16 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 			else {
-				sprintf_s(sText, "Failed to retrieve volumne information for %s.", gsDrive);
+				sprintf_s(sText, "Failed to retrieve volume information for %s.", gsDrive);
 				MessageBox(hWnd, sText, gsTitleCaption, MB_ICONINFORMATION);
 				return true;
 			}
 
-			Set_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "LastDrive", gsDrive);
-			Set_BOOLRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "AllowCache", gbUseWriteCache);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastChunkSize);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlocksPerRun", gsLastIOS);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Runs", gsLastIterations);
+			Set_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "LastDrive", gsDrive);
+			Set_BOOLRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "AllowCache", gbUseWriteCache);
 
 			EndDialog(hWnd, 100);
 			return TRUE;

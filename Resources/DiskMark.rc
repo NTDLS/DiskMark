@@ -60,71 +60,84 @@ IDI_MAIN                ICON                    "MainIcon.ico"
 // Dialog
 //
 
-IDD_CONFIG DIALOGEX 0, 0, 166, 119
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
+IDD_CONFIG DIALOGEX 0, 0, 236, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Benchmark Settings"
+FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    COMBOBOX        IDC_DISKDRIVE,54,7,105,30,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_CHUNKSIZE,54,22,105,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_IOS,54,39,105,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_ITERATIONS,54,56,105,14,ES_AUTOHSCROLL
-    CONTROL         "Allow Intermediate Caching?",IDC_ALLOWCACHING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,74,105,10
-    DEFPUSHBUTTON   "Start",IDC_CMDOK,120,98,39,14
-    PUSHBUTTON      "Help",IDC_CMDHELP,7,98,39,14
-    LTEXT           "Disk Drive",IDC_STATIC,13,9,34,8
-    LTEXT           "Chunk Size",IDC_STATIC,10,25,37,8
-    LTEXT           "IOs",IDC_STATIC,35,42,12,8
-    LTEXT           "Iterations",IDC_STATIC,17,59,30,8
-    PUSHBUTTON      "Cancel",IDC_CMDCANCEL,77,98,39,14
+    LTEXT           "Disk drive:",IDC_STATIC,10,12,60,8
+    COMBOBOX        IDC_DISKDRIVE,76,10,150,100,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Block size:",IDC_STATIC,10,31,60,8
+    EDITTEXT        IDC_CHUNKSIZE,76,29,150,14,ES_AUTOHSCROLL
+    LTEXT           "Blocks per run:",IDC_STATIC,10,50,60,8
+    EDITTEXT        IDC_IOS,76,48,150,14,ES_AUTOHSCROLL
+    LTEXT           "Runs:",IDC_STATIC,10,69,60,8
+    EDITTEXT        IDC_ITERATIONS,76,67,150,14,ES_AUTOHSCROLL
+    CONTROL         "Allow OS write caching (flush is timed)",IDC_ALLOWCACHING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,86,150,10
+    LTEXT           "Values accept expressions such as 64 * 1024. Reads always bypass the OS cache so they measure the disk, not RAM.",IDC_CFGHINT,10,102,216,22
+    PUSHBUTTON      "Help",IDC_CMDHELP,10,129,45,14
+    PUSHBUTTON      "Cancel",IDC_CMDCANCEL,126,129,45,14
+    DEFPUSHBUTTON   "Start",IDC_CMDOK,181,129,45,14
 END
 
-IDD_MAIN DIALOGEX 0, 0, 412, 233
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_MAIN DIALOGEX 0, 0, 470, 277
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Run",ID_CMDMULTI,355,212,50,14
-    LTEXT           "Bytes per Iteration:",IDC_STATIC,137,30,64,8
-    LTEXT           "Allow Caching:",IDC_STATIC,14,18,48,8
-    LTEXT           "IOs per Iteration:",IDC_STATIC,143,18,58,8
-    LTEXT           "Chunk Size:",IDC_STATIC,24,30,38,8
-    LTEXT           "Iterations:",IDC_STATIC,301,17,35,8
-    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_BYTESPERITERATION,204,30,58,8
-    LTEXT           "xxxxxxxxxxxxxxxxxx",IDC_ALLOWCACHE,64,18,58,8
-    LTEXT           "xxxxxxxxxxxxxxxxxxxx",IDC_IOS,204,18,58,8
-    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_CHUNKSIZE,64,30,58,8
-    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_ITERATIONS,338,17,58,8
-    GROUPBOX        "Configuration",IDC_STATIC,7,7,398,38
-    LTEXT           "Max:",IDC_STATIC,14,102,17,8
-    LTEXT           "Disk Time:",IDC_STATIC,14,62,33,8
-    LTEXT           "Average:",IDC_STATIC,14,82,31,8
-    LTEXT           "Last:",IDC_STATIC,14,72,17,8
-    LTEXT           "n/a",IDC_MAXWRITE,56,102,92,8
-    LTEXT           "n/a",IDC_DISKTIMEWRITE,56,62,92,8
-    LTEXT           "n/a",IDC_AVGWRITE,56,82,92,8
-    LTEXT           "n/a",IDC_LASTWRITE,56,72,92,8
-    GROUPBOX        "Write Performance",IDC_STATIC,7,50,145,69
-    CONTROL         "",IDC_DSKPROGRESS,"msctls_progress32",WS_BORDER,7,194,398,14
-    CONTROL         "",IDC_GRAPHWRITE,"Static",SS_BLACKRECT | SS_SUNKEN,157,54,248,66,WS_EX_CLIENTEDGE
-    CONTROL         "Always on Top?",IDC_ONTOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,215,66,10
-    LTEXT           "Min:",IDC_STATIC,14,92,14,8
-    LTEXT           "n/a",IDC_MINWRITE,56,92,92,8
-    PUSHBUTTON      "Help",IDC_CMDHELP,298,212,50,14
-    CONTROL         "",IDC_GRAPHREAD,"Static",SS_BLACKRECT | SS_SUNKEN,157,124,248,66,WS_EX_CLIENTEDGE
-    LTEXT           "Max:",IDC_STATIC,14,172,17,8
-    LTEXT           "Disk Time:",IDC_STATIC,14,132,33,8
-    LTEXT           "Average:",IDC_STATIC,14,152,31,8
-    LTEXT           "Last:",IDC_STATIC,14,142,17,8
-    LTEXT           "n/a",IDC_MAXREAD,56,172,92,8
-    LTEXT           "n/a",IDC_DISKTIMEREAD,56,132,92,8
-    LTEXT           "n/a",IDC_AVGREAD,56,152,92,8
-    LTEXT           "n/a",IDC_LASTREAD,56,142,92,8
-    GROUPBOX        "Read Performance",IDC_STATIC,7,121,145,69
-    LTEXT           "Min:",IDC_STATIC,14,162,14,8
-    LTEXT           "n/a",IDC_MINREAD,56,162,92,8
-    LTEXT           "Total Dataset Size:",IDC_STATIC,274,30,62,8
-    LTEXT           "xxxxxxxxxxxxxxxxx",IDC_TOTALDATASETSIZE,338,30,58,8
+    GROUPBOX        "Test Configuration",IDC_STATIC,7,4,456,54
+    LTEXT           "Drive:",IDC_STATIC,14,16,44,8
+    LTEXT           "n/a",IDC_DRIVEINFO,60,16,84,8
+    LTEXT           "Write cache:",IDC_STATIC,14,28,44,8
+    LTEXT           "n/a",IDC_ALLOWCACHE,60,28,84,8
+    LTEXT           "Block size:",IDC_STATIC,150,16,54,8
+    LTEXT           "n/a",IDC_CHUNKSIZE,208,16,70,8
+    LTEXT           "Blocks per run:",IDC_STATIC,150,28,54,8
+    LTEXT           "n/a",IDC_IOS,208,28,70,8
+    LTEXT           "Data per run:",IDC_STATIC,150,40,54,8
+    LTEXT           "n/a",IDC_BYTESPERITERATION,208,40,70,8
+    LTEXT           "Runs:",IDC_STATIC,290,16,58,8
+    LTEXT           "n/a",IDC_ITERATIONS,352,16,104,8
+    LTEXT           "Total data:",IDC_STATIC,290,28,58,8
+    LTEXT           "n/a",IDC_TOTALDATASETSIZE,352,28,104,8
+    GROUPBOX        "Write Performance",IDC_STATIC,7,62,190,78
+    CONTROL         "n/a",IDC_AVGWRITE,"Static",SS_LEFT,14,73,180,18
+    LTEXT           "average throughput",IDC_STATIC,14,92,100,8
+    LTEXT           "Last:",IDC_STATIC,14,104,26,8
+    LTEXT           "n/a",IDC_LASTWRITE,44,104,56,8
+    LTEXT           "Min:",IDC_STATIC,14,114,26,8
+    LTEXT           "n/a",IDC_MINWRITE,44,114,56,8
+    LTEXT           "Max:",IDC_STATIC,14,124,26,8
+    LTEXT           "n/a",IDC_MAXWRITE,44,124,56,8
+    LTEXT           "IOPS:",IDC_STATIC,104,104,34,8
+    LTEXT           "n/a",IDC_IOPSWRITE,140,104,54,8
+    LTEXT           "Latency:",IDC_STATIC,104,114,34,8
+    LTEXT           "n/a",IDC_LATWRITE,140,114,54,8
+    LTEXT           "Disk time:",IDC_STATIC,104,124,34,8
+    LTEXT           "n/a",IDC_DISKTIMEWRITE,140,124,54,8
+    CONTROL         "",IDC_GRAPHWRITE,"Static",SS_BLACKRECT | SS_SUNKEN,202,66,261,70
+    GROUPBOX        "Read Performance",IDC_STATIC,7,144,190,78
+    CONTROL         "n/a",IDC_AVGREAD,"Static",SS_LEFT,14,155,180,18
+    LTEXT           "average throughput",IDC_STATIC,14,174,100,8
+    LTEXT           "Last:",IDC_STATIC,14,186,26,8
+    LTEXT           "n/a",IDC_LASTREAD,44,186,56,8
+    LTEXT           "Min:",IDC_STATIC,14,196,26,8
+    LTEXT           "n/a",IDC_MINREAD,44,196,56,8
+    LTEXT           "Max:",IDC_STATIC,14,206,26,8
+    LTEXT           "n/a",IDC_MAXREAD,44,206,56,8
+    LTEXT           "IOPS:",IDC_STATIC,104,186,34,8
+    LTEXT           "n/a",IDC_IOPSREAD,140,186,54,8
+    LTEXT           "Latency:",IDC_STATIC,104,196,34,8
+    LTEXT           "n/a",IDC_LATREAD,140,196,54,8
+    LTEXT           "Disk time:",IDC_STATIC,104,206,34,8
+    LTEXT           "n/a",IDC_DISKTIMEREAD,140,206,54,8
+    CONTROL         "",IDC_GRAPHREAD,"Static",SS_BLACKRECT | SS_SUNKEN,202,148,261,70
+    CONTROL         "",IDC_DSKPROGRESS,"msctls_progress32",PBS_SMOOTH,7,228,456,8
+    LTEXT           "Ready.",IDC_STATUS,7,241,456,8
+    CONTROL         "Always on top",IDC_ONTOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,258,70,10
+    PUSHBUTTON      "Copy Results",IDC_CMDCOPY,259,255,66,14
+    PUSHBUTTON      "Help",IDC_CMDHELP,331,255,60,14
+    DEFPUSHBUTTON   "Run",ID_CMDMULTI,395,255,68,14
 END
 
 IDD_NETLOGO DIALOGEX 0, 0, 273, 87
@@ -166,9 +179,9 @@ BEGIN
     IDD_MAIN, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 405
+        RIGHTMARGIN, 463
         TOPMARGIN, 7
-        BOTTOMMARGIN, 226
+        BOTTOMMARGIN, 270
     END
 
     IDD_NETLOGO, DIALOG

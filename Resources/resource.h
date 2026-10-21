@@ -69,6 +69,14 @@
 #define IDC_READGRAPH               1064
 #define IDC_GRAPHREAD               1065
 #define IDC_TOTALDATASETSIZE        1066
+#define IDC_DRIVEINFO               1067
+#define IDC_IOPSWRITE               1068
+#define IDC_IOPSREAD                1069
+#define IDC_LATWRITE                1070
+#define IDC_LATREAD                 1071
+#define IDC_STATUS                  1072
+#define IDC_CMDCOPY                 1073
+#define IDC_CFGHINT                 1074
 
 // Next default values for new objects
 // 
@@ -76,7 +84,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_CONTROL_VALUE         1075
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

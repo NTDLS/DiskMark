@@ -42,30 +42,30 @@ bool InitializeApp(void)
 	DWORD dwsRegValueSz = 0;
 
 	dwsRegValueSz = sizeof(gsDrive);
-	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "LastDrive", gsDrive, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "LastDrive", gsDrive, dwsRegValueSz))
 	{
 		strcpy_s(gsDrive, sizeof(gsDrive), "");
 	}
 
 	dwsRegValueSz = sizeof(gsLastChunkSize);
-	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "ChunkSize", gsLastChunkSize, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlockSize", gsLastChunkSize, dwsRegValueSz))
 	{
-		strcpy_s(gsLastChunkSize, sizeof(gsLastChunkSize), "1024 * 64");
+		strcpy_s(gsLastChunkSize, sizeof(gsLastChunkSize), "1024 * 1024");
 	}
 
 	dwsRegValueSz = sizeof(gsLastIOS);
-	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "IOS", gsLastIOS, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "BlocksPerRun", gsLastIOS, dwsRegValueSz))
 	{
-		strcpy_s(gsLastIOS, sizeof(gsLastIOS), "128");
+		strcpy_s(gsLastIOS, sizeof(gsLastIOS), "64");
 	}
 
 	dwsRegValueSz = sizeof(gsLastIterations);
-	if (!Get_StringRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "Iterations", gsLastIterations, dwsRegValueSz))
+	if (!Get_StringRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "Runs", gsLastIterations, dwsRegValueSz))
 	{
-		strcpy_s(gsLastIterations, sizeof(gsLastIterations), "320");
+		strcpy_s(gsLastIterations, sizeof(gsLastIterations), "16");
 	}
 
-	gbUseWriteCache = Get_BOOLRegistryValue(HKEY_LOCAL_MACHINE, gsRegistryKey, "AllowCache");
+	gbUseWriteCache = Get_BOOLRegistryValue(HKEY_CURRENT_USER, gsRegistryKey, "AllowCache");
 
 	return true;
 }
