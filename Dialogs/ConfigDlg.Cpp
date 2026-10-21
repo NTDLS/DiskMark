@@ -141,6 +141,12 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	if (uMsg == WM_COMMAND)
 	{
+		if (wParam == IDC_CMDABOUT)
+		{
+			ShowAbout(hWnd);
+			return TRUE;
+		}
+
 		if (wParam == IDC_CMDHELP) //- Ok Button.
 		{
 			OpenHelp(hWnd);
@@ -329,17 +335,7 @@ INT_PTR CALLBACK ConfigDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	{
 		if (LOWORD(wParam) == CONFIGMENU_MENU_ABOUT) //- About.
 		{
-			_AboutDialogInfo ADI;
-
-			ADI.DisplayIcon = LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN));
-			ADI.TitleCaption = gsTitleCaption;
-			ADI.FileVersion = gsFileVersion;
-			ADI.BuildDate = __DATE__;
-			ADI.BuildTime = __TIME__;
-			ADI.CopyRight = gsAppCopyRight;
-			ADI.OwnerHandle = hWnd;
-
-			NetLogo(&ADI);
+			ShowAbout(hWnd);
 			return TRUE;
 		}
 

@@ -1,34 +1,47 @@
 <HTML>
 <HEAD>
-   <TITLE>Configuration Dialog</TITLE>
+   <TITLE>Settings Dialog</TITLE>
 </HEAD>
 <BODY LINK="#0000FF" VLINK="#800080">
 
 <CENTER><P><IMG SRC="AppLogo.gif"></P></CENTER>
 
-<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Configuration Dialog</FONT></H2>
+<H2 ALIGN=CENTER><FONT COLOR="#0000FF">Settings Dialog</FONT></H2>
 <P><HR WIDTH="100%"></P>
 
 <P>
-The configuration dialog allows you to set the parameters of the disk benchmarking process.<BR><BR>
-<Img Src="Config.png">
+The settings dialog appears when DiskMark starts and whenever you press <B>Run</B>. It sets the parameters of the benchmark.
+Your choices are remembered for next time.
 </P>
-<BR>
 
-<B>Disk Drive:</B><BR>
-Allows you to select the disk drive to benchmark. You can also type in a path, such as to a network share to more-or-less benchmark the speed of the connection.<BR><BR>
+<B>Disk drive:</B><BR>
+The drive to benchmark. Fixed disks, removable media, network drives and RAM disks are listed; CD-ROM drives are not.
+The test file is created in the root of the drive (or in a <TT>DiskMark-Temp</TT> folder if the root is not writable)
+and is deleted when the test ends.<BR><BR>
 
-<B>Chunk Size:</B><BR>
-The chunk size allows you to specify how much data will be written to the test file at one time.<BR><BR>
+<B>Block size:</B><BR>
+How much data is read or written with each I/O request. Small blocks (4 KB) emphasize IOPS and latency; large blocks (1 MB and up) emphasize sequential throughput.
+The value is rounded up to a multiple of the drive's sector size, and may not exceed 1 GB or one quarter of your physical RAM.<BR><BR>
 
-<B>IOs:</B><BR>
-The IOs specifies how many times the chunk size will be written to the test file. Example: If you select a 64 KB chunk size and 1024 IOs the resulting test file will be 64 MB, meaning that the test will be comprised of writing a 64 MB file, 64K at a time in 1,024 loops. The resulting file will also be used for the read test.<BR><BR>
+<B>Test file size:</B><BR>
+The size of the temporary file used for the test. DiskMark does sequential I/O through the file and wraps back to the start when it reaches the end,
+so the file can be much smaller than the amount of data moved during the test. The file must fit in the drive's free space and hold at least one block.
+Use a size larger than the drive's own cache (for example 1 GB or more) for the most honest results.<BR><BR>
 
-<B>Iterations:</B><BR>
-The iterations allows you to set how many times the benchmark will be run. Each iterations will allow DiskMark to average the performance of each IO, so a higher value (25 - 200 iterations) provides more accurate results.<BR><BR>
+<B>Duration (sec):</B><BR>
+How long the write test runs, and then how long the read test runs. The default is 30, so a default test takes about a minute.
+Throughput is sampled once per second; longer tests give a better picture of sustained performance, including any slowdown when a drive's fast cache fills.<BR><BR>
 
-<B>Allow Intermediate Caching:</B><BR>
-When this option is selected, DiskMark will allow windows to use any available caches and to perform lazy writes. Selecting this option WILL increase performance but should remain unchecked when you want to check the speed of the drive alone.<BR><BR>
+<B>Allow OS write caching:</B><BR>
+Unchecked (the default), writes bypass the Windows file cache and are written through to the device, so you measure the drive itself.
+When checked, Windows may buffer writes, but DiskMark flushes the file at the end of every sample and includes the flush in the timing,
+so the result is still the rate at which data reaches the disk. Reads always bypass the Windows cache.<BR><BR>
+
+<B>Expressions:</B><BR>
+The block size, test file size and duration accept simple expressions such as <TT>64 * 1024</TT> or <TT>1024 * 1024 * 1024</TT>.<BR><BR>
+
+<B>Buttons:</B><BR>
+<B>Start</B> begins the test. <B>Cancel</B> closes the dialog without testing. <B>Help</B> opens this help file and <B>About</B> shows version information.<BR><BR>
 
 </BODY>
 </HTML>

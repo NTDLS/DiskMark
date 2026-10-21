@@ -17,6 +17,7 @@
 #include "Entry.H"
 #include "Routines.H"
 #include "DiskBench.H"
+#include "../Dialogs/NetLogoDlg.H"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +43,23 @@ void OpenHelp(HWND hWnd)
 			MessageBox(hWnd, "Cannot locate the Help File.", gsTitleCaption, MB_ICONERROR);
 		}
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ShowAbout(HWND hWnd)
+{
+	_AboutDialogInfo ADI;
+
+	ADI.DisplayIcon = LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN));
+	ADI.TitleCaption = gsTitleCaption;
+	ADI.FileVersion = gsFileVersion;
+	ADI.BuildDate = __DATE__;
+	ADI.BuildTime = __TIME__;
+	ADI.CopyRight = gsAppCopyRight;
+	ADI.OwnerHandle = hWnd;
+
+	NetLogo(&ADI);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

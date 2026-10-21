@@ -664,6 +664,11 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			return TRUE;
 		}
+		else if (LOWORD(wParam) == IDC_CMDABOUT)
+		{
+			ShowAbout(hWnd);
+			return TRUE;
+		}
 		else if (LOWORD(wParam) == IDC_CMDHELP)
 		{
 			OpenHelp(hWnd);
@@ -694,17 +699,7 @@ INT_PTR CALLBACK MainDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if (LOWORD(wParam) == CONFIGMENU_MENU_ABOUT) //- About.
 		{
-			_AboutDialogInfo ADI;
-
-			ADI.DisplayIcon = LoadIcon(ghAppInstance, MAKEINTRESOURCE(IDI_MAIN));
-			ADI.TitleCaption = gsTitleCaption;
-			ADI.FileVersion = gsFileVersion;
-			ADI.BuildDate = __DATE__;
-			ADI.BuildTime = __TIME__;
-			ADI.CopyRight = gsAppCopyRight;
-			ADI.OwnerHandle = hWnd;
-
-			NetLogo(&ADI);
+			ShowAbout(hWnd);
 			return TRUE;
 		}
 
